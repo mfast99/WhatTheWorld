@@ -1,0 +1,6 @@
+@WhatTheWorld.Api_HostAddress = http://localhost:5230
+
+GET {{WhatTheWorld.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
