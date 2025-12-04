@@ -16,6 +16,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\WhatTheWorld.Application\WhatTheWorld.Application.csproj" />
+    <ProjectReference Include="..\WhatTheWorld.Domain\WhatTheWorld.Domain.csproj" />
+    <ProjectReference Include="..\WhatTheWorld.Infrastructure\WhatTheWorld.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Using Include="Xunit" />
   </ItemGroup>
 
