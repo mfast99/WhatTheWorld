@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using WhatTheWorld.Domain;
+﻿using WhatTheWorld.Domain;
 
 namespace WhatTheWorld.Infrastructure.Mappings
 {

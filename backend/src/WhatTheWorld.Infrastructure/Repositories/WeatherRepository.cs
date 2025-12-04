@@ -4,14 +4,9 @@ using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
 namespace WhatTheWorld.Infrastructure.Repositories
 {
-    public class WeatherRepository : IWeatherRepository
+    public sealed class WeatherRepository(AppDbContext context) : IWeatherRepository
     {
-        private readonly AppDbContext _context;
-
-        public WeatherRepository(AppDbContext context)
-        {
-            _context = context;
-        }
+        private readonly AppDbContext _context = context;
 
         public async Task<WeatherDto?> GetCurrentWeatherByCountryAsync(int countryId)
         {

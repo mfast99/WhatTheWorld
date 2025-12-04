@@ -5,11 +5,9 @@ using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
 namespace WhatTheWorld.Infrastructure.Repositories
 {
-    public class NewsRepository : INewsRepository
+    public sealed class NewsRepository(AppDbContext context) : INewsRepository
     {
-        private readonly AppDbContext _context;
-
-        public NewsRepository(AppDbContext context) => _context = context;
+        private readonly AppDbContext _context = context;
 
         public async Task<List<NewsDto>> GetCurrentNewsByCountryAsync(int countryId)
         {
@@ -30,7 +28,6 @@ namespace WhatTheWorld.Infrastructure.Repositories
         {
             try
             {
-                news.Country = _context.Countries.Where(c => c.Id == news.CountryId).FirstOrDefault();
                 await _context.News.AddAsync(news);
                 await _context.SaveChangesAsync();
                 return true;

@@ -5,14 +5,9 @@ namespace WhatTheWorld.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class WeatherController : ControllerBase
+    public sealed class WeatherController(IWeatherService weatherService) : ControllerBase
     {
-        private readonly IWeatherService _weatherService;
-
-        public WeatherController(IWeatherService weatherService)
-        {
-            _weatherService = weatherService;
-        }
+        private readonly IWeatherService _weatherService = weatherService;
 
         [HttpGet]
         public async Task<IActionResult> GetCurrentWeather([FromQuery] int countryId)

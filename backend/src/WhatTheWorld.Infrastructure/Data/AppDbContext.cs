@@ -3,13 +3,11 @@ using WhatTheWorld.Domain;
 
 namespace WhatTheWorld.Infrastructure.Data;
 
-public class AppDbContext : DbContext
+public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {
     public DbSet<CountryEntity> Countries { get; set; }
     public DbSet<NewsEntity> News { get; set; }
     public DbSet<WeatherEntity> Weather { get; set; }
-
-    public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -33,7 +31,7 @@ public class AppDbContext : DbContext
             entity.Property(c => c.Id).ValueGeneratedOnAdd();
 
             entity.HasOne(n => n.Country)
-                  .WithMany(c => c.News) 
+                  .WithMany(c => c.News)
                   .HasForeignKey(n => n.CountryId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
@@ -46,7 +44,7 @@ public class AppDbContext : DbContext
             entity.Property(c => c.Id).ValueGeneratedOnAdd();
 
             entity.HasOne(w => w.Country)
-                  .WithMany(c => c.Weather)  
+                  .WithMany(c => c.Weather)
                   .HasForeignKey(w => w.CountryId)
                   .OnDelete(DeleteBehavior.Cascade);
         });

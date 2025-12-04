@@ -5,17 +5,11 @@ using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
 namespace WhatTheWorld.Application.Services
 {
-    public class NewsService : INewsService
+    public sealed class NewsService(INewsRepository newsRepository, IPerplexityService perplexityService, IMemoryCache cache) : INewsService
     {
-        private readonly INewsRepository _newsRepository;
-        private readonly IPerplexityService _perplexityService;
-        private readonly IMemoryCache _cache;
-        public NewsService(INewsRepository newsRepository, IPerplexityService perplexityService, IMemoryCache cache)
-        {
-            _newsRepository = newsRepository;
-            _perplexityService = perplexityService;
-            _cache = cache;
-        }
+        private readonly INewsRepository _newsRepository = newsRepository;
+        private readonly IPerplexityService _perplexityService = perplexityService;
+        private readonly IMemoryCache _cache = cache;
 
         public async Task<List<NewsDto>> GetNewsByCountryIdAsync(int countryId)
         {

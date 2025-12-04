@@ -1,19 +1,13 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WhatTheWorld.Application.Services.Interfaces;
-using WhatTheWorld.Domain;
 
 namespace WhatTheWorld.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class NewsController : ControllerBase
+    public sealed class NewsController(INewsService newsService) : ControllerBase
     {
-        private readonly INewsService _newsService;
-
-        public NewsController(INewsService newsService)
-        {
-            _newsService = newsService;
-        }
+        private readonly INewsService _newsService = newsService;
 
         [HttpGet]
         public async Task<IActionResult> GetNewsByCountry([FromQuery] int countryId)

@@ -3,8 +3,8 @@
     public record NewsDto(
         int Id,
         DateTime PublishedAt,
-        string Title, 
-        string Url, 
+        string Title,
+        string Url,
         string Source,
         string Summary);
 

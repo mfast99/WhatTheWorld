@@ -8,28 +8,19 @@ using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
 namespace WhatTheWorld.Application.Services
 {
-    public class WeatherService : IWeatherService
+    public sealed class WeatherService(
+        IWeatherRepository weatherRepository,
+        ICountryRepository countryRepository,
+        HttpClient httpClient,
+        IConfiguration config,
+        IMemoryCache cache) : IWeatherService
     {
-        private readonly IWeatherRepository _weatherRepository;
-        private readonly ICountryRepository _countryRepository;
-        private readonly HttpClient _httpClient;
-        private readonly IConfiguration _config;
-        private readonly IMemoryCache _cache;
-        private readonly string _apiKey;
-        public WeatherService(
-            IWeatherRepository weatherRepository,
-            ICountryRepository countryRepository,
-            HttpClient httpClient,
-            IConfiguration config,
-            IMemoryCache cache)
-        {
-            _weatherRepository = weatherRepository;
-            _countryRepository = countryRepository;
-            _httpClient = httpClient;
-            _config = config;
-            _cache = cache;
-            _apiKey = config["WeatherApiKey"] ?? throw new InvalidOperationException("WeatherApiKey missing");
-        }
+        private readonly IWeatherRepository _weatherRepository = weatherRepository;
+        private readonly ICountryRepository _countryRepository = countryRepository;
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly IConfiguration _config = config;
+        private readonly IMemoryCache _cache = cache;
+        private readonly string _apiKey = config["WeatherApiKey"] ?? throw new InvalidOperationException("WeatherApiKey missing");
 
         public async Task<WeatherDto?> GetCurrentWeatherByCountryIdAsync(int countryId)
         {
@@ -76,7 +67,7 @@ namespace WhatTheWorld.Application.Services
                 var current = root.GetProperty("current");
                 var condition = current.GetProperty("condition");
 
-                WeatherEntity weather = new WeatherEntity
+                WeatherEntity weather = new()
                 {
                     CountryId = countryId,
                     Time = DateTime.UtcNow,

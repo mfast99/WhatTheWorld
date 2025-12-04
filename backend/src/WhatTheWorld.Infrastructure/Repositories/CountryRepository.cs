@@ -6,11 +6,9 @@ using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
 namespace WhatTheWorld.Infrastructure.Repositories
 {
-    public class CountryRepository : ICountryRepository
+    public sealed class CountryRepository(AppDbContext context) : ICountryRepository
     {
-        private readonly AppDbContext _context;
-
-        public CountryRepository(AppDbContext context) => _context = context;
+        private readonly AppDbContext _context = context;
 
         public async Task<List<CountryDto>> GetAllCountriesAsync()
         {

@@ -1,36 +1,22 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
+﻿using Microsoft.Extensions.Configuration;
 using System.Net.Http.Json;
-using System.Text;
 using System.Text.Json;
+using WhatTheWorld.Application.Services.Interfaces;
 using WhatTheWorld.Domain;
 using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
-namespace WhatTheWorld.Application.Services.Interfaces
+namespace WhatTheWorld.Application.Services
 {
-    public class PerplexityService : IPerplexityService
+    public sealed class PerplexityService(
+        HttpClient httpClient,
+        IConfiguration config,
+        ICountryRepository countryRepository) : IPerplexityService
     {
-        private readonly HttpClient _httpClient;
-        private readonly IConfiguration _config;
-        private readonly string _apiKey;
-        private readonly INewsRepository _newsRepository;
-        private readonly ICountryRepository _countryRepository;
-
-        public PerplexityService(
-            HttpClient httpClient,
-            IConfiguration config,
-            INewsRepository newsRepository,
-            ICountryRepository countryRepository)
-        {
-            _httpClient = httpClient;
-            _config = config;
-            _apiKey = config["PerplexityApiKey"] ?? 
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly IConfiguration _config = config;
+        private readonly string _apiKey = config["PerplexityApiKey"] ??
                 throw new InvalidOperationException("PerplexityApiKey missing");
-            _newsRepository = newsRepository;
-            _countryRepository = countryRepository;
-        }
+        private readonly ICountryRepository _countryRepository = countryRepository;
 
         public async Task<List<NewsDto>> GenerateNewsByCountryIdAsync(int countryId)
         {
@@ -82,14 +68,14 @@ namespace WhatTheWorld.Application.Services.Interfaces
                     );
                     newsList.Add(newsDto);
                 }
-                newsList = newsList.Take(3).ToList();
+                newsList = [.. newsList.Take(3)];
 
                 return newsList;
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Perplexity Error: {ex.Message}");
-                return new();
+                return [];
             }
         }
     }

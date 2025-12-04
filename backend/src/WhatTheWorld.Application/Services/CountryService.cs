@@ -4,14 +4,9 @@ using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
 namespace WhatTheWorld.Application.Services
 {
-    public class CountryService : ICountryService
+    public sealed class CountryService(ICountryRepository repository) : ICountryService
     {
-        private readonly ICountryRepository _repository;
-
-        public CountryService(ICountryRepository repository)
-        {
-            _repository = repository;
-        }
+        private readonly ICountryRepository _repository = repository;
 
         public async Task<List<CountryDto>> GetAllCountriesAsync()
         {

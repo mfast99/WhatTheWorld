@@ -5,7 +5,7 @@
         DateTime Time,
         double TempCelsius,
         double TempFahrenheit,
-        string Description, 
+        string Description,
         string IconUrl
     );
 
