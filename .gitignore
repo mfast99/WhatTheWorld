@@ -416,3 +416,4 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+/backend/src/WhatTheWorld.Api/appsettings.json
