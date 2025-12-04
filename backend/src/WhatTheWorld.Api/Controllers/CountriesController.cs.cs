@@ -1,5 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using WhatTheWorld.Application.Services;
+using WhatTheWorld.Application.Services.Interfaces;
 using WhatTheWorld.Domain;
 
 namespace WhatTheWorld.Api.Controllers
@@ -18,7 +18,7 @@ namespace WhatTheWorld.Api.Controllers
         [HttpGet("{code}")]
         public async Task<IActionResult> GetCountry(string code)
         {
-            Country? country = await _countryService.GetByCodeAsync(code);
+            CountryDto? country = await _countryService.GetByCodeAsync(code);
             if (country == null) return NotFound();
             return Ok(country);
         }

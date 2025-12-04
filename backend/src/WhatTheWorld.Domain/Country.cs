@@ -1,18 +1,45 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
+﻿
 namespace WhatTheWorld.Domain
 {
-    public record Country(
-        string Code,      // "DE", "US", "FR"
-        string Name,      // "Germany", "United States"
-        string Capital,   // "Berlin", "Washington D.C."
-        string FlagEmoji, // "🇩🇪", "🇺🇸"
-        double Lat,       // 52.52 (Berlin)
-        double Lon        // 13.405 (Berlin)
+    public record CountryDto(
+        int Id,
+        string Code,
+        string Name,
+        string Capital,
+        string FlagEmoji,
+        double Lat,
+        double Lon,
+        string Region,
+        string Subregion,
+        string Population,
+        string AreaKm2,
+        string Timezones,
+        string Currencies,
+        string Languages
     );
 
-    public record NewsArticle(string Title, string Url, string Source);
-    public record WeatherData(double TempCelsius, string Description, string IconUrl);
+    public class CountryEntity
+    {
+        public int Id { get; set; }
+        public string Code { get; set; } = string.Empty;
+        public string Name { get; set; } = string.Empty;
+        public string Capital { get; set; } = string.Empty;
+        public string FlagEmoji { get; set; } = string.Empty;
+        public double Lat { get; set; }
+        public double Lon { get; set; }
+        public string Region { get; set; } = string.Empty;
+        public string Subregion { get; set; } = string.Empty;
+        public string Population { get; set; } = string.Empty;
+        public string AreaKm2 { get; set; } = string.Empty;
+        public string Timezones { get; set; } = string.Empty;
+        public string Currencies { get; set; } = string.Empty;
+        public string Languages { get; set; } = string.Empty;
+        public List<NewsEntity> News { get; set; } = [];
+        public List<WeatherEntity> Weather { get; set; } = [];
+
+        public CountryDto? ToDto()
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

@@ -1,5 +1,6 @@
-﻿using WhatTheWorld.Domain;
-using WhatTheWorld.Infrastructure.Repositories;
+﻿using WhatTheWorld.Application.Services.Interfaces;
+using WhatTheWorld.Domain;
+using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
 namespace WhatTheWorld.Application.Services
 {
@@ -12,9 +13,9 @@ namespace WhatTheWorld.Application.Services
             _repository = repository;
         }
 
-        public async Task<Country?> GetByCodeAsync(string code)
+        public async Task<CountryDto?> GetByCodeAsync(string code)
         {
-            return await _repository.GetByCodeAsync(code);
+            return await _repository.GetCountryByCodeAsync(code);
         }
     }
 }

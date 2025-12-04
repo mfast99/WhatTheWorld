@@ -417,3 +417,4 @@ FodyWeavers.xsd
 *.msm
 *.msp
 /backend/src/WhatTheWorld.Api/appsettings.json
+/backend/src/WhatTheWorld.Infrastructure/Migrations/
