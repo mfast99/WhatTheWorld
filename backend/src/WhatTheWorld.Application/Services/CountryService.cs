@@ -13,9 +13,10 @@ namespace WhatTheWorld.Application.Services
             _repository = repository;
         }
 
-        public async Task<CountryDto?> GetByCodeAsync(string code)
+        public async Task<List<CountryDto>> GetAllCountriesAsync()
         {
-            return await _repository.GetCountryByCodeAsync(code);
+            var countries = await _repository.GetAllCountriesAsync();
+            return countries;
         }
     }
 }

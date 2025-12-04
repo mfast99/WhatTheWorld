@@ -15,12 +15,11 @@ namespace WhatTheWorld.Api.Controllers
             _countryService = countryService;
         }
 
-        [HttpGet("{code}")]
-        public async Task<IActionResult> GetCountry(string code)
+        [HttpGet]
+        public async Task<IActionResult> GetAllCountries()
         {
-            CountryDto? country = await _countryService.GetByCodeAsync(code);
-            if (country == null) return NotFound();
-            return Ok(country);
+            var countries = await _countryService.GetAllCountriesAsync();
+            return Ok(countries);
         }
     }
 }

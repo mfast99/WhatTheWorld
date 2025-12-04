@@ -110,10 +110,6 @@ namespace WhatTheWorld.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<string>("Content")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
                     b.Property<int>("CountryId")
                         .HasColumnType("INTEGER");
 

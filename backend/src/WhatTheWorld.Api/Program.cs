@@ -25,12 +25,16 @@ builder.Services.AddSwaggerGen();
 
 builder.Services.AddHttpClient<IWeatherService, WeatherService>(client =>
 {
-    client.BaseAddress = new Uri("https://api.weatherapi.com/v1/");
+    client.BaseAddress = new Uri(
+        builder.Configuration["ExternalApis:WeatherApiBaseUrl"]
+        ?? "https://api.weatherapi.com/v1/current.json");
     client.DefaultRequestHeaders.Add("User-Agent", "WhatTheWorld/1.0");
 });
 builder.Services.AddHttpClient<IPerplexityService, PerplexityService>(client =>
 {
-    client.BaseAddress = new Uri("https://api.perplexity.ai/");
+    client.BaseAddress = new Uri(
+        builder.Configuration["ExternalApis:PerplexityBaseUrl"]
+        ?? "https://api.perplexity.ai/chat/completions");
     client.DefaultRequestHeaders.Add("User-Agent", "WhatTheWorld/1.0");
 });
 

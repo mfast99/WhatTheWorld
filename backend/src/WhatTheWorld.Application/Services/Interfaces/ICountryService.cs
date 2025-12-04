@@ -4,6 +4,6 @@ namespace WhatTheWorld.Application.Services.Interfaces
 {
     public interface ICountryService
     {
-        Task<CountryDto?> GetByCodeAsync(string countryCode);
+        Task<List<CountryDto>> GetAllCountriesAsync();
     }
 }

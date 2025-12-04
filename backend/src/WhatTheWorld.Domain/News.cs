@@ -6,9 +6,7 @@
         string Title, 
         string Url, 
         string Source,
-        string Content,
-        string Summary
-        );
+        string Summary);
 
     public class NewsEntity
     {
@@ -18,7 +16,6 @@
         public string Title { get; set; } = string.Empty;
         public string Url { get; set; } = string.Empty;
         public string Source { get; set; } = string.Empty;
-        public string Content { get; set; } = string.Empty;
         public string Summary { get; set; } = string.Empty;
 
         // Navigation Property

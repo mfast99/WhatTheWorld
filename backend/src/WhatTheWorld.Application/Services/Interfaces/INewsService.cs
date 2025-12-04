@@ -4,7 +4,6 @@ namespace WhatTheWorld.Application.Services.Interfaces
 {
     public interface INewsService
     {
-        Task<List<NewsDto>> GetCurrentNewsByCountryAsync(int countryId );
-        Task<bool> CreateNewsAsync(NewsEntity news);
+        Task<List<NewsDto>> GetNewsByCountryIdAsync(int countryId);
     }
 }

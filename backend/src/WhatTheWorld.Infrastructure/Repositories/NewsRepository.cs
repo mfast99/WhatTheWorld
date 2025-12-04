@@ -13,22 +13,26 @@ namespace WhatTheWorld.Infrastructure.Repositories
 
         public async Task<List<NewsDto>> GetCurrentNewsByCountryAsync(int countryId)
         {
-            var result = _context.News.Where(
-                n => n.Country.Id == countryId && 
-                n.PublishedAt.Date > DateTime.Now.Subtract(TimeSpan.FromDays(7)))
+            var cutoffDate = DateTime.UtcNow.Subtract(TimeSpan.FromDays(7)).Date;
+
+            var result = await _context.News
+                .Where(n => n.CountryId == countryId && n.PublishedAt.Date > cutoffDate)
                 .OrderByDescending(n => n.PublishedAt)
                 .Select(n => new NewsDto(
-                    n.Id, n.PublishedAt, n.Title, n.Url, n.Source, n.Content, n.Summary))
+                    n.Id, n.PublishedAt, n.Title, n.Url, n.Source, n.Summary))
                 .ToListAsync();
 
-            return await result;
+            return result;
         }
+
 
         public async Task<bool> CreateNewsAsync(NewsEntity news)
         {
             try
             {
+                news.Country = _context.Countries.Where(c => c.Id == news.CountryId).FirstOrDefault();
                 await _context.News.AddAsync(news);
+                await _context.SaveChangesAsync();
                 return true;
             }
             catch (Exception)

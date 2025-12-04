@@ -31,7 +31,7 @@ namespace WhatTheWorld.Application.Services
             _apiKey = config["WeatherApiKey"] ?? throw new InvalidOperationException("WeatherApiKey missing");
         }
 
-        public async Task<WeatherDto?> GetCurrentWeatherByCountryAsync(int countryId)
+        public async Task<WeatherDto?> GetCurrentWeatherByCountryIdAsync(int countryId)
         {
             var cacheKey = $"weather_{countryId}";
             if (_cache.TryGetValue(cacheKey, out WeatherDto? cachedWeather))
@@ -95,5 +95,4 @@ namespace WhatTheWorld.Application.Services
             }
         }
     }
-}
 }

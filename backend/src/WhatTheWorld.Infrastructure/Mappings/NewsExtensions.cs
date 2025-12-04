@@ -18,7 +18,6 @@ namespace WhatTheWorld.Infrastructure.Mappings
                 news.Title,
                 news.Url,
                 news.Source,
-                news.Content,
                 news.Summary
             );
         }

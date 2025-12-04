@@ -18,7 +18,7 @@ namespace WhatTheWorld.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetNewsByCountry([FromQuery] int countryId)
         {
-            var news = await _newsService.GetCurrentNewsByCountryAsync(countryId);
+            var news = await _newsService.GetNewsByCountryIdAsync(countryId);
             return Ok(news);
         }
     }

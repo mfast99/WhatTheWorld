@@ -17,7 +17,7 @@ namespace WhatTheWorld.Api.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCurrentWeather([FromQuery] int countryId)
         {
-            var weather = await _weatherService.GetCurrentWeatherByCountryAsync(countryId);
+            var weather = await _weatherService.GetCurrentWeatherByCountryIdAsync(countryId);
             if (weather == null) return NotFound("No weather data found");
             return Ok(weather);
         }

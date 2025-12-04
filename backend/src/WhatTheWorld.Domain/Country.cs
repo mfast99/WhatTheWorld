@@ -36,10 +36,5 @@ namespace WhatTheWorld.Domain
         public string Languages { get; set; } = string.Empty;
         public List<NewsEntity> News { get; set; } = [];
         public List<WeatherEntity> Weather { get; set; } = [];
-
-        public CountryDto? ToDto()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

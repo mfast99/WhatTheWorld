@@ -4,8 +4,9 @@ namespace WhatTheWorld.Infrastructure.Repositories.Interfaces
 {
     public interface ICountryRepository
     {
+        Task<List<CountryDto>> GetAllCountriesAsync();
         Task<string> GetCountryNameByIdAsync(int countryId);
-        Task<CountryDto?> GetCountryByCodeAsync(string code);
+        Task<CountryDto?> GetCountryByIdAsync(int Id);
         Task<CountryEntity?> GetCountryWithDetailsAsync(string code);
         Task<int> CreateCountryAsync(CountryEntity country);
         Task<bool> UpdateCountryAsync(CountryEntity country);

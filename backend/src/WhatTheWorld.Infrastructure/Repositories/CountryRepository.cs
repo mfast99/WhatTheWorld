@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WhatTheWorld.Domain;
 using WhatTheWorld.Infrastructure.Data;
+using WhatTheWorld.Infrastructure.Mappings;
 using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
 namespace WhatTheWorld.Infrastructure.Repositories
@@ -11,6 +12,13 @@ namespace WhatTheWorld.Infrastructure.Repositories
 
         public CountryRepository(AppDbContext context) => _context = context;
 
+        public async Task<List<CountryDto>> GetAllCountriesAsync()
+        {
+            var result = await _context.Countries
+                .Select(c => c.ToDto())
+                .ToListAsync();
+            return result!;
+        }
         public async Task<string> GetCountryNameByIdAsync(int countryId)
         {
             var result = await _context.Countries
@@ -20,9 +28,9 @@ namespace WhatTheWorld.Infrastructure.Repositories
             return result ?? string.Empty;
         }
 
-        public async Task<CountryDto?> GetCountryByCodeAsync(string code)
+        public async Task<CountryDto?> GetCountryByIdAsync(int Id)
         {
-            var result = await _context.Countries.FirstOrDefaultAsync(c => c.Code == code);
+            var result = await _context.Countries.FirstOrDefaultAsync(c => c.Id == Id);
             return result?.ToDto();
         }
 
