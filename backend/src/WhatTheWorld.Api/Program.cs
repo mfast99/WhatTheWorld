@@ -38,7 +38,21 @@ builder.Services.AddHttpClient<IPerplexityService, PerplexityService>(client =>
     client.DefaultRequestHeaders.Add("User-Agent", "WhatTheWorld/1.0");
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", builder =>
+    {
+        builder
+            .WithOrigins("http://localhost:5173", "http://localhost:3000")
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials();
+    });
+});
+
 var app = builder.Build();
+
+app.UseCors("AllowFrontend");
 
 if (app.Environment.IsDevelopment())
 {

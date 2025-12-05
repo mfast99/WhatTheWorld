@@ -22,6 +22,8 @@ namespace WhatTheWorld.Infrastructure.Repositories
         {
             try
             {
+                weather.Country = _context.Countries.Find(weather.CountryId)
+                                  ?? throw new InvalidOperationException("Country not found.");
                 await _context.Weather.AddAsync(weather);
                 await _context.SaveChangesAsync();
                 return weather.Id;
