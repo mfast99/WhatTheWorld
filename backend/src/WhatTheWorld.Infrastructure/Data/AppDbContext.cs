@@ -48,25 +48,5 @@ public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(op
                   .HasForeignKey(w => w.CountryId)
                   .OnDelete(DeleteBehavior.Cascade);
         });
-
-        modelBuilder.Entity<CountryEntity>().HasData(
-            new CountryEntity
-            {
-                Id = 1,
-                Code = "DE",
-                Name = "Germany",
-                Capital = "Berlin",
-                FlagEmoji = "🇩🇪",
-                Lat = 52.52,
-                Lon = 13.405,
-                Region = "Europe",
-                Subregion = "Western Europe",
-                Population = "83166711",
-                AreaKm2 = "357022",
-                Timezones = "UTC+01:00",
-                Currencies = "Euro (EUR)",
-                Languages = "German"
-            }
-        );
     }
 }

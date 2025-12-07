@@ -1,4 +1,5 @@
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
+using WhatTheWorld.Api;
 using WhatTheWorld.Application.Services;
 using WhatTheWorld.Application.Services.Interfaces;
 using WhatTheWorld.Infrastructure.Data;
@@ -37,6 +38,7 @@ builder.Services.AddHttpClient<IPerplexityService, PerplexityService>(client =>
         ?? "https://api.perplexity.ai/chat/completions");
     client.DefaultRequestHeaders.Add("User-Agent", "WhatTheWorld/1.0");
 });
+builder.Services.AddHttpClient<CountrySeedService>();
 
 builder.Services.AddCors(options =>
 {
@@ -51,6 +53,29 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    var seedService = scope.ServiceProvider.GetRequiredService<CountrySeedService>();
+
+    try
+    {
+        Console.WriteLine("Clearing existing countries...");
+        context.Countries.RemoveRange(context.Countries);
+        await context.SaveChangesAsync();
+        Console.WriteLine("Countries cleared!");
+
+        Console.WriteLine("Seeding countries...");
+        await seedService.SeedCountriesAsync(context);
+        Console.WriteLine("Seeding complete!");
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"❌ Error: {ex.Message}");
+        throw;
+    }
+}
 
 app.UseCors("AllowFrontend");
 

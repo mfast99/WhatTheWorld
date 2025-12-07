@@ -2,18 +2,12 @@
 using WhatTheWorld.Domain;
 using WhatTheWorld.Infrastructure.Data;
 using WhatTheWorld.Infrastructure.Repositories;
-using static WhatTheWorld.Infrastructure.Test.Repositories.TestDataSeeder;
 
 namespace WhatTheWorld.Infrastructure.Test.Repositories
 {
-    public class CountryRepositoryTest : IClassFixture<DbContextFixture>
+    public class CountryRepositoryTest(DbContextFixture fixture) : IClassFixture<DbContextFixture>
     {
-        private readonly DbContextFixture _fixture;
-
-        public CountryRepositoryTest(DbContextFixture fixture)
-        {
-            _fixture = fixture;
-        }
+        private readonly DbContextFixture _fixture = fixture;
 
         [Fact]
         public async Task GetCountryNameByIdAsync_ReturnsEmptyString_WhenNotFound()

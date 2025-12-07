@@ -77,7 +77,7 @@ namespace WhatTheWorld.Application.Test.Services
             const int countryId = 1;
 
             _mockNewsRepo.Setup(r => r.GetCurrentNewsByCountryAsync(countryId))
-                        .ReturnsAsync(new List<NewsDto>());  
+                        .ReturnsAsync([]);  
 
             var perplexityNews = new List<NewsDto>
             {
@@ -92,7 +92,7 @@ namespace WhatTheWorld.Application.Test.Services
                         .ReturnsAsync(true);
 
             _mockNewsRepo.SetupSequence(r => r.GetCurrentNewsByCountryAsync(countryId))
-                        .ReturnsAsync(new List<NewsDto>())      
+                        .ReturnsAsync([])      
                         .ReturnsAsync(perplexityNews);        
 
             var service = _service;
@@ -164,7 +164,7 @@ namespace WhatTheWorld.Application.Test.Services
                 new(7, DateTime.UtcNow, "Test News", "https://test.com", "Test", "Cached")
             };
             _mockNewsRepo.SetupSequence(r => r.GetCurrentNewsByCountryAsync(countryId))
-                        .ReturnsAsync(new List<NewsDto>())      
+                        .ReturnsAsync([])      
                         .ReturnsAsync(perplexityNews);      
 
             _mockPerplexityService.Setup(p => p.GenerateNewsByCountryIdAsync(countryId))
