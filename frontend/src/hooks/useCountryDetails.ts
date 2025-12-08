@@ -15,17 +15,17 @@ export function useCountryDetails(countryId: number | null): UseCountryDetailsRe
 
   useEffect(() => {
     if (!countryId) {
-      setCountry(null)
-      setIsLoading(false)
       return
     }
 
     let isMounted = true
+    
+    setCountry(null)
+    setError(null)
 
     const fetchCountryDetails = async () => {
       try {
         setIsLoading(true)
-        setError(null)
         
         const data = await CountryRepository.getById(countryId)
         
@@ -36,13 +36,12 @@ export function useCountryDetails(countryId: number | null): UseCountryDetailsRe
         } else {
           setError(new Error('Country not found'))
         }
-        
-        setIsLoading(false)
       } catch (err) {
-        console.error(`❌ [useCountryDetails] Error:`, err)
-        
         if (isMounted) {
           setError(err as Error)
+        }
+      } finally {
+        if (isMounted) {
           setIsLoading(false)
         }
       }
