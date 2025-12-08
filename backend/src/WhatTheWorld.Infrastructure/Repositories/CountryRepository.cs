@@ -10,34 +10,33 @@ namespace WhatTheWorld.Infrastructure.Repositories
     {
         private readonly AppDbContext _context = context;
 
-        public async Task<List<CountryDto>> GetAllCountriesAsync()
+        public async Task<List<CountryListDto>> GetAllCountriesAsync()
         {
             var result = await _context.Countries
-                .Select(c => c.ToDto())
+                .Select(c => c.ToListDto())
                 .ToListAsync();
-            return result!;
+            return result;
         }
-        public async Task<string> GetCountryNameByIdAsync(int countryId)
+
+        public async Task<CountryDto> GetCountryByIdAsync(int Id)
         {
-            var result = await _context.Countries
-                .Where(c => c.Id == countryId)
+            try
+            {
+                var result = await _context.Countries.FirstOrDefaultAsync(c => c.Id == Id);
+                return result!.ToDto();
+            }
+            catch (Exception)
+            {
+                Console.WriteLine("Country doesnt exist.");
+                throw;
+            }
+        }
+
+        public async Task<string> GetCountryNameByIdAsync(int id)
+        {
+            return _context.Countries.Where(c => c.Id == id)
                 .Select(c => c.Name)
-                .FirstOrDefaultAsync();
-            return result ?? string.Empty;
-        }
-
-        public async Task<CountryDto?> GetCountryByIdAsync(int Id)
-        {
-            var result = await _context.Countries.FirstOrDefaultAsync(c => c.Id == Id);
-            return result?.ToDto();
-        }
-
-        public async Task<CountryEntity?> GetCountryWithDetailsAsync(string code)
-        {
-            return await _context.Countries
-                .Include(c => c.News)
-                .Include(c => c.Weather)
-                .FirstOrDefaultAsync(c => c.Code == code);
+                .FirstOrDefault() ?? string.Empty;
         }
 
         public async Task<int> CreateCountryAsync(CountryEntity country)

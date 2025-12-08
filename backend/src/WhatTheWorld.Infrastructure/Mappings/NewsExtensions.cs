@@ -12,6 +12,7 @@ namespace WhatTheWorld.Infrastructure.Mappings
             return new NewsDto(
                 news.Id,
                 news.PublishedAt,
+                news.CreatedAt,
                 news.Title,
                 news.Url,
                 news.Source,

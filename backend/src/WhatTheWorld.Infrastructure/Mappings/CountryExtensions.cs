@@ -4,11 +4,8 @@ namespace WhatTheWorld.Infrastructure.Mappings
 {
     public static class CountryExtensions
     {
-        public static CountryDto? ToDto(this CountryEntity? country)
+        public static CountryDto ToDto(this CountryEntity country)
         {
-            if (country == null)
-                return null;
-
             return new CountryDto(
                 country.Id,
                 country.Code,
@@ -24,6 +21,16 @@ namespace WhatTheWorld.Infrastructure.Mappings
                 country.Timezones,
                 country.Currencies,
                 country.Languages
+            );
+        }
+
+        public static CountryListDto ToListDto(this CountryEntity country)
+        {
+            return new CountryListDto(
+                country.Id,
+                country.Name,
+                country.Lat,
+                country.Lon
             );
         }
     }

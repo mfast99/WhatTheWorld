@@ -1,7 +1,7 @@
 ﻿
 namespace WhatTheWorld.Domain
 {
-    public record CountryDto(
+    public sealed record CountryDto(
         int Id,
         string Code,
         string Name,
@@ -16,6 +16,13 @@ namespace WhatTheWorld.Domain
         string Timezones,
         string Currencies,
         string Languages
+    );
+
+    public sealed record CountryListDto(
+        int Id,
+        string Name,
+        double Lat,
+        double Lon
     );
 
     public class CountryEntity

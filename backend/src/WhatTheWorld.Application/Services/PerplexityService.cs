@@ -61,6 +61,7 @@ namespace WhatTheWorld.Application.Services
                         item.TryGetProperty("publishedAt", out var pubDate)
                             ? DateTime.Parse(pubDate.GetString() ?? "")
                             : DateTime.UtcNow,
+                        DateTime.UtcNow,
                         item.GetProperty("title").GetString() ?? "",
                         item.GetProperty("url").GetString() ?? "",
                         item.GetProperty("source").GetString() ?? "Unknown",

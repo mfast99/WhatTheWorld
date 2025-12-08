@@ -8,10 +8,16 @@ namespace WhatTheWorld.Application.Services
     {
         private readonly ICountryRepository _repository = repository;
 
-        public async Task<List<CountryDto>> GetAllCountriesAsync()
+        public async Task<List<CountryListDto>> GetAllCountriesAsync()
         {
             var countries = await _repository.GetAllCountriesAsync();
             return countries;
+        }
+
+        public async Task<CountryDto> GetCountryByIdAsync(int id)
+        {
+            var result = await _repository.GetCountryByIdAsync(id);
+            return result;
         }
     }
 }

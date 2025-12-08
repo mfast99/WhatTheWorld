@@ -23,11 +23,11 @@ namespace WhatTheWorld.Application.Test.Services
         public async Task GetAllCountriesAsync_ReturnsCountries_WhenRepositoryReturnsData()
         {
             // Arrange
-            var expectedCountries = new List<CountryDto>
+            var expectedCountries = new List<CountryListDto>
             {
-                new(1, "DE", "Germany", "Berlin", "🇩🇪", 52.52, 13.405, "Europe", "Western Europe", "83166711", "357022", "UTC+1", "EUR", "German"),
-                new(2, "US", "United States", "Washington D.C.", "🇺🇸", 38.895, -77.0369, "Americas", "Northern America", "331002651", "9833515", "EST/PST", "USD", "English"),
-                new(3, "FR", "France", "Paris", "🇫🇷", 48.8566, 2.3522, "Europe", "Western Europe", "67318000", "643801", "UTC+1", "EUR", "French")
+                new(1, "Germany", 52.52, 13.405),
+                new(2, "United States", 38.895, -77.0369),
+                new(3,"France", 48.8566, 2.3522)
             };
 
             _mockRepository.Setup(r => r.GetAllCountriesAsync())
@@ -40,7 +40,6 @@ namespace WhatTheWorld.Application.Test.Services
             Assert.NotNull(result);
             Assert.Equal(3, result.Count);
             Assert.Equal("Germany", result[0].Name);
-            Assert.Equal("🇺🇸", result[1].FlagEmoji);
 
             _mockRepository.Verify(r => r.GetAllCountriesAsync(), Times.Once);
         }
@@ -49,7 +48,7 @@ namespace WhatTheWorld.Application.Test.Services
         public async Task GetAllCountriesAsync_ReturnsEmptyList_WhenRepositoryReturnsEmpty()
         {
             // Arrange
-            var emptyList = new List<CountryDto>();
+            var emptyList = new List<CountryListDto>();
             _mockRepository.Setup(r => r.GetAllCountriesAsync())
                           .ReturnsAsync(emptyList);
 
@@ -84,7 +83,7 @@ namespace WhatTheWorld.Application.Test.Services
         {
             // Arrange
             var countries = Enumerable.Range(1, expectedCount)
-                .Select(i => new CountryDto(i, $"Code{i}", $"Country{i}", $"Capital{i}", "🏳️", 0.0, 0.0, "Region", "Subregion", "1M", "100k", "UTC", "EUR", "Lang"))
+                .Select(i => new CountryListDto(i, $"Country{i}", 0.0, 0.0))
                 .ToList();
 
             _mockRepository.Setup(r => r.GetAllCountriesAsync())

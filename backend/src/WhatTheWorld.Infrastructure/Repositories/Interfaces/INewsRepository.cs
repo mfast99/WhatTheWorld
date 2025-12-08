@@ -4,7 +4,9 @@ namespace WhatTheWorld.Infrastructure.Repositories.Interfaces
 {
     public interface INewsRepository
     {
-        Task<List<NewsDto>> GetCurrentNewsByCountryAsync(int countryId);
-        Task<bool> CreateNewsAsync(NewsEntity news);
+        Task<List<NewsDto>> GetCachedNewsByCountryAsync(int countryId);
+        Task<DateTime?> GetLastFetchTimeAsync(int countryId);
+        Task<bool> CreateNewsAsync(int countryId, List<NewsDto> newsItems);
+        Task<int> CleanupOldNewsAsync();
     }
 }

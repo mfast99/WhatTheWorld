@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using WhatTheWorld.Api;
 using WhatTheWorld.Application.Services;
 using WhatTheWorld.Application.Services.Interfaces;
@@ -8,7 +10,14 @@ using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    });
+
 builder.Services.AddScoped<ICountryRepository, CountryRepository>();
 builder.Services.AddScoped<INewsRepository, NewsRepository>();
 builder.Services.AddScoped<IWeatherRepository, WeatherRepository>();
@@ -61,18 +70,23 @@ using (var scope = app.Services.CreateScope())
 
     try
     {
+        /*
+         *************************************************************
+         * Kept for development purposes only! Remove/comment out in production!
+         *************************************************************
         Console.WriteLine("Clearing existing countries...");
         context.Countries.RemoveRange(context.Countries);
         await context.SaveChangesAsync();
         Console.WriteLine("Countries cleared!");
-
+        *************************************************************
+        */
         Console.WriteLine("Seeding countries...");
         await seedService.SeedCountriesAsync(context);
         Console.WriteLine("Seeding complete!");
     }
     catch (Exception ex)
     {
-        Console.WriteLine($"❌ Error: {ex.Message}");
+        Console.WriteLine($"Error in Seeding: {ex.Message}");
         throw;
     }
 }

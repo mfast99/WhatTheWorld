@@ -4,6 +4,7 @@ namespace WhatTheWorld.Application.Services.Interfaces
 {
     public interface ICountryService
     {
-        Task<List<CountryDto>> GetAllCountriesAsync();
+        Task<List<CountryListDto>> GetAllCountriesAsync();
+        Task<CountryDto> GetCountryByIdAsync(int id);
     }
 }

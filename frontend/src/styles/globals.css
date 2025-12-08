@@ -1,0 +1,67 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: 14 165 233;
+  --color-primary-400: 56 189 248;
+  --color-primary-500: 14 165 233;
+  --color-primary-600: 2 132 199;
+  
+  --color-text: 17 24 39;
+  --color-bg: 255 255 255;
+}
+
+@layer base {
+  :root {
+    --color-bg: 255 255 255;
+    --color-text: 17 24 39;
+    --color-border: 229 231 235;
+  }
+
+  [data-color-scheme="dark"] {
+    --color-bg: 17 24 39;
+    --color-text: 255 255 255;
+    --color-border: 55 65 81;
+  }
+
+  *,
+  *::before,
+  *::after {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    @apply bg-[rgb(var(--color-bg))] text-[rgb(var(--color-text))];
+    width: 100%;
+    min-height: 100%;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+
+  #root {
+    width: 100%;
+    min-height: 100vh;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-sky-500 text-white rounded-lg font-medium;
+    @apply hover:bg-sky-600 transition-colors duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-sky-500;
+  }
+
+  .glass-card {
+    @apply bg-white/10 backdrop-blur-sm border border-white/20;
+    @apply rounded-xl p-6 shadow-lg;
+  }
+
+  [data-color-scheme="dark"] .glass-card {
+    @apply bg-white/5 border-white/10;
+  }
+}

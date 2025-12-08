@@ -10,19 +10,6 @@ namespace WhatTheWorld.Infrastructure.Test.Repositories
         private readonly DbContextFixture _fixture = fixture;
 
         [Fact]
-        public async Task GetCountryNameByIdAsync_ReturnsEmptyString_WhenNotFound()
-        {
-            // Arrange
-            var repo = new CountryRepository(_fixture.Context);
-
-            // Act
-            var result = await repo.GetCountryNameByIdAsync(999);
-
-            // Assert
-            Assert.Equal(string.Empty, result);
-        }
-
-        [Fact]
         public async Task GetCountryByIdAsync_ReturnsNull_WhenNotFound()
         {
             // Arrange

@@ -1,0 +1,70 @@
+import { JSX, useState } from 'react'
+import { useCountries } from '../../hooks/useCountries'
+import { useCountryDetails } from '../../hooks/useCountryDetails'
+import { CountryListItem } from '../../domain/models/Country'
+import CountrySelector from '../components/CountrySelector'
+import CountryDetail from '../components/CountryDetail'
+import { useResponsive } from '../../hooks/useResponsive'
+
+export default function HomePage(): JSX.Element {
+  const { countries, isLoading, error } = useCountries()
+  const [selectedCountryId, setSelectedCountryId] = useState<number | null>(null)
+  const { country: selectedCountry, isLoading: isLoadingDetails } = useCountryDetails(selectedCountryId)
+  const { isMobile } = useResponsive()
+
+  const handleSelectCountry = (country: CountryListItem) => {
+    setSelectedCountryId(country.id)
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[rgb(var(--color-bg))]">
+        <div className="text-red-500 text-xl">❌ Error loading data!</div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen pt-16 bg-[rgb(var(--color-bg))]">
+      {!isMobile ? (
+        <CountrySelector
+          countries={countries}
+          selectedCountry={selectedCountry}
+          isLoadingDetails={isLoadingDetails}
+          onSelectCountry={handleSelectCountry}
+          isLoading={isLoading}
+        />
+      ) : selectedCountry ? (
+        <div className="flex flex-col">
+          <button
+            onClick={() => setSelectedCountryId(null)}
+            className="p-4 font-semibold border-b border-[rgb(var(--color-border))]"
+          >
+            ← Back to list
+          </button>
+          <div>
+            {isLoadingDetails ? (
+              <div className="p-6">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-8 bg-black/10 dark:bg-white/10 rounded w-3/4" />
+                  <div className="h-4 bg-black/10 dark:bg-white/10 rounded w-1/2" />
+                  <div className="h-32 bg-black/10 dark:bg-white/10 rounded" />
+                </div>
+              </div>
+            ) : (
+              <CountryDetail country={selectedCountry} />
+            )}
+          </div>
+        </div>
+      ) : (
+        <CountrySelector
+          countries={countries}
+          selectedCountry={null}
+          isLoadingDetails={false}
+          onSelectCountry={handleSelectCountry}
+          isLoading={isLoading}
+        />
+      )}
+    </div>
+  )
+}
