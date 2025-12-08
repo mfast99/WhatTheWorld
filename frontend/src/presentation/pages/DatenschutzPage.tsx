@@ -221,10 +221,10 @@ export default function DatenschutzPage(): JSX.Element {
               </p>
               <p className="mt-3">
                 Kontakt: <a 
-                  href="mailto:max@mustermann.de" 
+                  href="mailto:mikefast@gmx.net" 
                   className="text-sky-500 hover:underline"
                 >
-                  max@mustermann.de
+                  mikefast@gmx.net
                 </a>
               </p>
             </div>

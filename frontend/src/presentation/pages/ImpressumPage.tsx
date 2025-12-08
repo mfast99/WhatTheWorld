@@ -22,9 +22,9 @@ export default function ImpressumPage(): JSX.Element {
           <section>
             <h2 className="text-xl font-semibold mb-3">Verantwortlich für den Inhalt</h2>
             <div className="bg-white/5 dark:bg-white/5 border border-[rgb(var(--color-border))] rounded-lg p-4">
-              <p className="font-medium">Max Mustermann</p>
-              <p className="text-sm opacity-75">Musterstraße 123</p>
-              <p className="text-sm opacity-75">12345 Musterstadt</p>
+              <p className="font-medium">Mike Fast</p>
+              <p className="text-sm opacity-75">Helmstedter Straße 75</p>
+              <p className="text-sm opacity-75">38126 Braunschweig</p>
               <p className="text-sm opacity-75 mt-2">Deutschland</p>
             </div>
           </section>
@@ -35,10 +35,10 @@ export default function ImpressumPage(): JSX.Element {
               <p className="text-sm">
                 <span className="opacity-60">E-Mail:</span>{' '}
                 <a 
-                  href="mailto:max@mustermann.de" 
+                  href="mailto:mikefast@gmx.net" 
                   className="text-sky-500 hover:underline"
                 >
-                  max@mustermann.de
+                  mikefast@gmx.net
                 </a>
               </p>
             </div>
@@ -48,8 +48,8 @@ export default function ImpressumPage(): JSX.Element {
             <h2 className="text-xl font-semibold mb-3">Hinweis</h2>
             <div className="bg-sky-500/10 border border-sky-500/30 rounded-lg p-4">
               <p className="text-sm">
-                Dies ist ein <strong>Ausbildungsprojekt</strong> im Rahmen der 
-                IHK-Abschlussprüfung zum Fachinformatiker Anwendungsentwicklung.
+                Dies ist ein <strong>persönliches Projekt</strong>, 
+                das ausschließlich zu Lern- und Übungszwecken erstellt wurde
               </p>
             </div>
           </section>
@@ -69,7 +69,7 @@ export default function ImpressumPage(): JSX.Element {
               <div>
                 <h3 className="font-semibold mb-1">Haftung für Links</h3>
                 <p>
-                  Unser Angebot enthält Links zu externen Webseiten Dritter, auf deren 
+                  Das Angebot enthält Links zu externen Webseiten Dritter, auf deren 
                   Inhalte wir keinen Einfluss haben. Für die Inhalte der verlinkten 
                   Seiten ist stets der jeweilige Anbieter oder Betreiber der Seiten verantwortlich.
                 </p>
