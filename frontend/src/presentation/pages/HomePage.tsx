@@ -18,14 +18,23 @@ export default function HomePage(): JSX.Element {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[rgb(var(--color-bg))]">
+      <div className="h-screen flex items-center justify-center bg-[rgb(var(--color-bg))]">
         <div className="text-red-500 text-xl">❌ Error loading data!</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen pt-16 bg-[rgb(var(--color-bg))]">
+    <div 
+      style={{
+        position: 'fixed',
+        top: '64px',
+        left: 0,
+        right: 0,
+        bottom: 0,
+        overflow: 'hidden'
+      }}
+    >
       {!isMobile ? (
         <CountrySelector
           countries={countries}
@@ -35,14 +44,14 @@ export default function HomePage(): JSX.Element {
           isLoading={isLoading}
         />
       ) : selectedCountry ? (
-        <div className="flex flex-col">
+        <div className="h-full flex flex-col bg-[rgb(var(--color-bg))]">
           <button
             onClick={() => setSelectedCountryId(null)}
-            className="p-4 font-semibold border-b border-[rgb(var(--color-border))]"
+            className="p-4 font-semibold border-b border-[rgb(var(--color-border))] shrink-0"
           >
             ← Back to list
           </button>
-          <div>
+          <div className="flex-1 overflow-y-auto">
             {isLoadingDetails ? (
               <div className="p-6">
                 <div className="animate-pulse space-y-4">
