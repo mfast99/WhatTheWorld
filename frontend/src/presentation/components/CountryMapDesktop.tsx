@@ -36,7 +36,7 @@ export default function CountryMapDesktop({
       center: [20, 0],
       zoom: 2,
       minZoom: 3,
-      maxZoom: 18,
+      maxZoom: 8,
       maxBounds: extendedBounds,
       maxBoundsViscosity: 1.0,
       zoomControl: true,
