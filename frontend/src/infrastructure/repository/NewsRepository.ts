@@ -11,7 +11,7 @@ export interface NewsRefreshResult {
 export class NewsRepository {
   static async getCached(countryId: number): Promise<News[]> {
     try {
-      const response = await http.get<News[]>('/api/News/cached', {
+      const response = await http.get<News[]>('/news/cached', {
         params: { countryId }
       })
       
@@ -25,7 +25,7 @@ export class NewsRepository {
   static async refresh(countryId: number): Promise<NewsRefreshResult | null> {
     try {
       const response = await http.post<NewsRefreshResult>(
-        '/api/News/refresh',
+        '/news/refresh',
         null,
         {
           params: { countryId },

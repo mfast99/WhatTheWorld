@@ -4,7 +4,7 @@ import { Country, CountryListItem } from '../../domain/models/Country'
 export class CountryRepository {
   static async getList(): Promise<CountryListItem[]> {
     try {
-      const response = await http.get<CountryListItem[]>('/api/Countries')
+      const response = await http.get<CountryListItem[]>('/countries')
       return response.data
     } catch (error) {
       console.error('❌ [CountryRepository] Error fetching list:', error)
@@ -14,7 +14,7 @@ export class CountryRepository {
 
   static async getById(id: number): Promise<Country | null> {
     try {
-      const response = await http.get<Country>(`/api/Countries/${id}`)
+      const response = await http.get<Country>(`/countries/${id}`)
       return response.data
     } catch (error) {
       console.error(`❌ [CountryRepository] Error fetching country ${id}:`, error)

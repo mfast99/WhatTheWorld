@@ -10,7 +10,7 @@ export class WeatherRepository {
    */
   static async getByCountryId(countryId: number): Promise<Weather | null> {
     try {
-      const response = await http.get<Weather>('/api/Weather', {
+      const response = await http.get<Weather>('/weather', {
         params: { countryId }
       })
       return response.data
