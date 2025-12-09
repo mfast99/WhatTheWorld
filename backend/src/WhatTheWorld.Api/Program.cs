@@ -117,7 +117,7 @@ try
             }
             else
             {
-                Log.Information("Countries exist, skipping seeding");
+                Log.Information("Countries exist, skip seeding");
             }
         }
         catch (Exception ex)
