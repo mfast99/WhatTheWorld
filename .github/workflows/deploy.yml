@@ -24,14 +24,14 @@ jobs:
         cd backend/src
         dotnet restore WhatTheWorld.sln
         
-        # 2. Solution publishen. Wir entfernen --no-restore
-        # WARNUNG NETSDK1194 ignorieren und den korrekten Output-Ordner angeben
+        # 2. Solution publishen. Output liegt in ./publish
         dotnet publish WhatTheWorld.sln -c Release -o ./publish
         
         # 3. Den finalen API-Code in ein temp-Verzeichnis verschieben
-        # Dies vereinfacht den folgenden Upload (Schritt 4)
+        # ACHTUNG: Wir rsyncen nun direkt den Inhalt des publish-Ordners, 
+        # da die DLLs direkt darin liegen und NICHT in einem Unterordner WhatTheWorld.Api
         mkdir -p ../temp_backend_publish
-        rsync -a ./publish/WhatTheWorld.Api/ ../temp_backend_publish/
+        rsync -a ./publish/ ../temp_backend_publish/
 
     # 3. React Frontend bauen (Bleibt gleich)
     - name: Build Frontend
