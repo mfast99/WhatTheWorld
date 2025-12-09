@@ -37,8 +37,10 @@ try
             options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
         });
 
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
+                               ?? "Data Source=whattheworld.db"; 
     builder.Services.AddDbContext<AppDbContext>(options =>
-        options.UseSqlite("Data Source=countries.db"));
+        options.UseSqlite(connectionString));
 
     builder.Services.AddMemoryCache();
 
@@ -49,7 +51,7 @@ try
     builder.Services.AddScoped<INewsService, NewsService>();
     builder.Services.AddScoped<IWeatherService, WeatherService>();
     builder.Services.AddScoped<IPerplexityService, PerplexityService>();
-    
+
     builder.Services.AddHttpClient<IWeatherService, WeatherService>(client =>
     {
         client.BaseAddress = new Uri(
@@ -95,19 +97,23 @@ try
 
     var app = builder.Build();
 
-    if (!app.Environment.IsDevelopment())
+    using (var scope = app.Services.CreateScope())
     {
-        using var scope = app.Services.CreateScope();
-        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-        var seedService = scope.ServiceProvider.GetRequiredService<CountrySeedService>();
+        var serviceProvider = scope.ServiceProvider;
+        var context = serviceProvider.GetRequiredService<AppDbContext>();
+        var seedService = serviceProvider.GetRequiredService<CountrySeedService>();
 
         try
         {
+            Log.Information("Applying database migrations...");
+            await context.Database.MigrateAsync();
+            Log.Information("Database migrations applied successfully.");
+
             if (!await context.Countries.AnyAsync())
             {
-                Log.Information("Production seeding started");
+                Log.Information("Country seeding started");
                 await seedService.SeedCountriesAsync(context);
-                Log.Information("Production seeding completed");
+                Log.Information("Country seeding completed");
             }
             else
             {
@@ -116,7 +122,8 @@ try
         }
         catch (Exception ex)
         {
-            Log.Error(ex, "Production seeding failed");
+            Log.Fatal(ex, "Application terminated unexpectedly during database initialization.");
+            throw;
         }
     }
 
