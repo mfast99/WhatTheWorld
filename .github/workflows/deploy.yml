@@ -12,41 +12,38 @@ jobs:
     # 1. Code auschecken
     - uses: actions/checkout@v4
 
-    # 2. .NET Backend bauen
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x' # Passe dies an deine Version an (z.B. 10.0 wenn verfügbar, sonst 8.0/9.0)
-    
+    # 2. .NET Backend bauen (Angepasst)
     - name: Build Backend
       run: |
+        # 1. Publishe die Solution. Output landet in: /backend/publish/WhatTheWorld.Api/
         cd backend 
-        dotnet publish -c Release -o ./publish
-
-    # 3. React Frontend bauen
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
+        dotnet publish WhatTheWorld.sln -c Release -o ./publish --no-restore
         
+        # 2. Verschiebe den finalen, lauffähigen API-Code in ein flaches Verzeichnis,
+        #    damit der SCP-Schritt einfacher wird.
+        mkdir -p ../temp_backend_publish
+        rsync -a ./publish/WhatTheWorld.Api/ ../temp_backend_publish/
+
+    # 3. React Frontend bauen (Bleibt gleich)
     - name: Build Frontend
       run: |
         cd frontend
         npm install
         npm run build
 
-    # 4. Dateien auf den Server kopieren (via SCP)
+    # 4. Dateien auf den Server kopieren (Angepasst)
     - name: Copy files to server
       uses: appleboy/scp-action@master
       with:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
-        source: "backend/publish/*,frontend/dist/*"
+        # Hier verwenden wir die neuen, vereinfachten Quellordner
+        source: "temp_backend_publish/*,frontend/dist/*"
         target: "/var/www/whattheworld_temp"
         strip_components: 0
 
-    # 5. Deployment auf dem Server finalisieren
+    # 5. Move files and restart (Angepasst)
     - name: Move files and restart
       uses: appleboy/ssh-action@master
       with:
@@ -54,8 +51,8 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          # Backend verschieben
-          rsync -a /var/www/whattheworld_temp/backend/publish/ /var/www/whattheworld/backend/
+          # Backend verschieben (die .dlls liegen jetzt direkt in /whattheworld_temp)
+          rsync -a /var/www/whattheworld_temp/temp_backend_publish/ /var/www/whattheworld/backend/
           
           # Frontend verschieben
           rsync -a /var/www/whattheworld_temp/frontend/dist/ /var/www/whattheworld/frontend/
@@ -63,5 +60,5 @@ jobs:
           # Temp löschen
           rm -rf /var/www/whattheworld_temp
           
-          # Service neustarten (erstellen wir gleich im nächsten Schritt)
+          # Service neustarten
           systemctl restart whattheworld-backend || true
