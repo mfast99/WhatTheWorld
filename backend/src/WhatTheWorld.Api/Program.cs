@@ -109,7 +109,7 @@ try
             await context.Database.MigrateAsync();
             Log.Information("Database migrations applied successfully.");
 
-            /*if (!await context.Countries.AnyAsync())
+            if (!await context.Countries.AnyAsync())
             {
                 Log.Information("Country seeding started");
                 await seedService.SeedCountriesAsync(context);
@@ -118,7 +118,7 @@ try
             else
             {
                 Log.Information("Countries exist, skipping seeding");
-            }*/
+            }
         }
         catch (Exception ex)
         {
