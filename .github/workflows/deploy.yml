@@ -16,7 +16,7 @@ jobs:
     - name: Build Backend
       run: |
         # 1. Publishe die Solution. Output landet in: /backend/publish/WhatTheWorld.Api/
-        cd backend 
+        cd backend/src
         dotnet publish WhatTheWorld.sln -c Release -o ./publish --no-restore
         
         # 2. Verschiebe den finalen, lauffähigen API-Code in ein flaches Verzeichnis,
