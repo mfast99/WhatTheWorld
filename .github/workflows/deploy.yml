@@ -13,14 +13,23 @@ jobs:
     - uses: actions/checkout@v4
 
     # 2. .NET Backend bauen (Angepasst)
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '10.0.x' # Wichtig: Nutze die korrekte .NET Version
+
     - name: Build Backend
       run: |
-        # 1. Publishe die Solution. Output landet in: /backend/publish/WhatTheWorld.Api/
+        # 1. Zuerst Pakete wiederherstellen
         cd backend/src
-        dotnet publish WhatTheWorld.sln -c Release -o ./publish --no-restore
+        dotnet restore WhatTheWorld.sln
         
-        # 2. Verschiebe den finalen, lauffähigen API-Code in ein flaches Verzeichnis,
-        #    damit der SCP-Schritt einfacher wird.
+        # 2. Solution publishen. Wir entfernen --no-restore
+        # WARNUNG NETSDK1194 ignorieren und den korrekten Output-Ordner angeben
+        dotnet publish WhatTheWorld.sln -c Release -o ./publish
+        
+        # 3. Den finalen API-Code in ein temp-Verzeichnis verschieben
+        # Dies vereinfacht den folgenden Upload (Schritt 4)
         mkdir -p ../temp_backend_publish
         rsync -a ./publish/WhatTheWorld.Api/ ../temp_backend_publish/
 
