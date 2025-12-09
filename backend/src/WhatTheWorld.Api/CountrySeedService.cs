@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.WebUtilities;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Primitives;
+﻿using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WhatTheWorld.Domain;
@@ -8,14 +6,10 @@ using WhatTheWorld.Infrastructure.Data;
 
 namespace WhatTheWorld.Api
 {
-    public class CountrySeedService
+    public class CountrySeedService(HttpClient httpClient, ILogger<CountrySeedService> logger)
     {
-        private readonly HttpClient _httpClient;
-
-        public CountrySeedService(HttpClient httpClient)
-        {
-            _httpClient = httpClient;
-        }
+        private readonly HttpClient _httpClient = httpClient;
+        private readonly ILogger<CountrySeedService> _logger = logger;
 
         public async Task SeedCountriesAsync(AppDbContext context)
         {
@@ -23,17 +17,17 @@ namespace WhatTheWorld.Api
             {
                 if (await context.Countries.AnyAsync())
                 {
-                    Console.WriteLine("Countryseeder: Countries already exist");
+                    _logger.LogInformation("Countryseeder: Countries already exist");
                     return;
                 }
 
-                Console.WriteLine("Loading countries from rest api...");
+                _logger.LogInformation("Loading countries from rest api...");
 
                 var countries = await FetchCountriesFromApiAsync();
 
                 if (countries == null || countries.Count == 0)
                 {
-                    Console.WriteLine("No countries loaded!");
+                    _logger.LogInformation("No countries loaded!");
                     return;
                 }
 
@@ -42,11 +36,11 @@ namespace WhatTheWorld.Api
                 context.Countries.AddRange(countryEntities);
                 await context.SaveChangesAsync();
 
-                Console.WriteLine($"{countryEntities.Count} countries successfully saved!");
+                _logger.LogInformation($"{countryEntities.Count} countries successfully saved!");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error during seeding {ex.Message}");
+                _logger.LogError($"Error during seeding {ex.Message}");
                 throw;
             }
         }
@@ -65,7 +59,7 @@ namespace WhatTheWorld.Api
 
                 var url2 = "https://restcountries.com/v3.1/all?fields=cca2,currencies,timezones";
 
-                Console.WriteLine($"📡 Request 2: {url2}");
+                _logger.LogInformation($"Request 2: {url2}");
                 var httpResponse2 = await _httpClient.GetAsync(url2);
                 var content2 = await httpResponse2.Content.ReadAsStringAsync();
 
@@ -88,14 +82,14 @@ namespace WhatTheWorld.Api
                 if (response1?.Count > 0)
                 {
                     var first = response1[0];
-                    Console.WriteLine($"🔍 First: {first.Cca2} - {first.Name?.Common}");
+                    _logger.LogInformation($"First: {first.Cca2} - {first.Name?.Common}");
                 }
 
                 return response1 ?? [];
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"❌ Error: {ex.Message}");
+                _logger.LogError($"Error: {ex.Message}");
                 return [];
             }
         }
@@ -113,7 +107,7 @@ namespace WhatTheWorld.Api
                 .DistinctBy(c => c.Cca2)
                 .ToList();
 
-            Console.WriteLine($"Original: {apiCountries.Count}, After Dedup: {uniqueCountries.Count}");
+            _logger.LogInformation($"Original: {apiCountries.Count}, After Dedup: {uniqueCountries.Count}");
 
             foreach (var apiCountry in uniqueCountries)
             {
@@ -143,7 +137,7 @@ namespace WhatTheWorld.Api
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Error at Seeding: {apiCountry.Name?.Common}: {ex.Message}");
+                    _logger.LogError($"Error at Seeding: {apiCountry.Name?.Common}: {ex.Message}");
                     continue;
                 }
             }

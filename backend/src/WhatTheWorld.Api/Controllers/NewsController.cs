@@ -11,7 +11,7 @@ namespace WhatTheWorld.Api.Controllers
         private readonly INewsService _newsService = newsService;
 
         /// <summary>
-        /// Get cached news (FAST - always returns immediately)
+        /// Get cached news
         /// </summary>
         [HttpGet("cached")]
         public async Task<IActionResult> GetCachedNews([FromQuery] int countryId)
@@ -21,7 +21,7 @@ namespace WhatTheWorld.Api.Controllers
         }
 
         /// <summary>
-        /// Refresh news if needed (SLOW - may take 10s)
+        /// Refresh news if needed
         /// Returns 304 Not Modified if already fresh
         /// </summary>
         [HttpPost("refresh")]
@@ -41,7 +41,7 @@ namespace WhatTheWorld.Api.Controllers
         }
 
         /// <summary>
-        /// Legacy endpoint (blocking)
+        /// Legacy endpoint
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> GetNews([FromQuery] int countryId)

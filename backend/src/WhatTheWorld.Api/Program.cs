@@ -1,6 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.HttpOverrides;
+using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using AspNetCoreRateLimit;
+using Serilog;
+using Serilog.Events;
 using WhatTheWorld.Api;
 using WhatTheWorld.Application.Services;
 using WhatTheWorld.Application.Services.Interfaces;
@@ -8,98 +12,139 @@ using WhatTheWorld.Infrastructure.Data;
 using WhatTheWorld.Infrastructure.Repositories;
 using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
-var builder = WebApplication.CreateBuilder(args);
+// Logging
+Log.Logger = new LoggerConfiguration()
+    .MinimumLevel.Information()
+    .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
+    .Enrich.FromLogContext()
+    .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.File("/var/log/whattheworld.log",
+        rollingInterval: RollingInterval.Day,
+        retainedFileCountLimit: 7)
+    .CreateLogger();
 
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
+try
+{
+    var builder = WebApplication.CreateBuilder(args);
+    builder.Host.UseSerilog();
+    builder.Logging.AddSerilog();
+
+    builder.Services.AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+            options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        });
+
+    builder.Services.AddDbContext<AppDbContext>(options =>
+        options.UseSqlite("Data Source=countries.db"));
+
+    builder.Services.AddMemoryCache();
+
+    builder.Services.AddScoped<ICountryRepository, CountryRepository>();
+    builder.Services.AddScoped<INewsRepository, NewsRepository>();
+    builder.Services.AddScoped<IWeatherRepository, WeatherRepository>();
+    builder.Services.AddScoped<ICountryService, CountryService>();
+    builder.Services.AddScoped<INewsService, NewsService>();
+    builder.Services.AddScoped<IWeatherService, WeatherService>();
+    builder.Services.AddScoped<IPerplexityService, PerplexityService>();
+    
+    builder.Services.AddHttpClient<IWeatherService, WeatherService>(client =>
     {
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.CamelCase;
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        client.BaseAddress = new Uri(
+            builder.Configuration["ExternalApis:WeatherApiBaseUrl"]
+            ?? "https://api.weatherapi.com/v1/current.json");
+        client.DefaultRequestHeaders.Add("User-Agent", "WhatTheWorld/1.0");
+    });
+    builder.Services.AddHttpClient<IPerplexityService, PerplexityService>(client =>
+    {
+        client.BaseAddress = new Uri(
+            builder.Configuration["ExternalApis:PerplexityBaseUrl"]
+            ?? "https://api.perplexity.ai/chat/completions");
+        client.DefaultRequestHeaders.Add("User-Agent", "WhatTheWorld/1.0");
+    });
+    builder.Services.AddHttpClient<CountrySeedService>();
+
+    builder.Services.Configure<IpRateLimitOptions>(builder.Configuration.GetSection("IpRateLimiting"));
+    builder.Services.AddSingleton<IIpPolicyStore, MemoryCacheIpPolicyStore>();
+    builder.Services.AddSingleton<IRateLimitCounterStore, MemoryCacheRateLimitCounterStore>();
+    builder.Services.AddSingleton<IRateLimitConfiguration, RateLimitConfiguration>();
+    builder.Services.AddSingleton<IProcessingStrategy, AsyncKeyLockProcessingStrategy>();
+
+    if (builder.Environment.IsDevelopment())
+    {
+        builder.Services.AddEndpointsApiExplorer();
+        builder.Services.AddSwaggerGen();
+    }
+
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy("AllowFrontend", policy =>
+        {
+            policy
+                .WithOrigins(
+                    "https://mfast47.de",
+                    "http://localhost:5173",
+                    "http://localhost:4173"
+                )
+                .AllowAnyMethod()
+                .AllowAnyHeader();
+        });
     });
 
-builder.Services.AddScoped<ICountryRepository, CountryRepository>();
-builder.Services.AddScoped<INewsRepository, NewsRepository>();
-builder.Services.AddScoped<IWeatherRepository, WeatherRepository>();
-builder.Services.AddScoped<ICountryService, CountryService>();
-builder.Services.AddScoped<INewsService, NewsService>();
-builder.Services.AddScoped<IWeatherService, WeatherService>();
-builder.Services.AddScoped<IPerplexityService, PerplexityService>();
+    var app = builder.Build();
 
-builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseSqlite("Data Source=countries.db"));
-
-builder.Services.AddMemoryCache();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-builder.Services.AddHttpClient<IWeatherService, WeatherService>(client =>
-{
-    client.BaseAddress = new Uri(
-        builder.Configuration["ExternalApis:WeatherApiBaseUrl"]
-        ?? "https://api.weatherapi.com/v1/current.json");
-    client.DefaultRequestHeaders.Add("User-Agent", "WhatTheWorld/1.0");
-});
-builder.Services.AddHttpClient<IPerplexityService, PerplexityService>(client =>
-{
-    client.BaseAddress = new Uri(
-        builder.Configuration["ExternalApis:PerplexityBaseUrl"]
-        ?? "https://api.perplexity.ai/chat/completions");
-    client.DefaultRequestHeaders.Add("User-Agent", "WhatTheWorld/1.0");
-});
-builder.Services.AddHttpClient<CountrySeedService>();
-
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowFrontend", builder =>
+    if (!app.Environment.IsDevelopment())
     {
-        builder
-            .WithOrigins("http://localhost:5173", "http://localhost:4173")
-            .AllowAnyMethod()
-            .AllowAnyHeader()
-            .AllowCredentials();
+        using var scope = app.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+        var seedService = scope.ServiceProvider.GetRequiredService<CountrySeedService>();
+
+        try
+        {
+            if (!await context.Countries.AnyAsync())
+            {
+                Log.Information("Production seeding started");
+                await seedService.SeedCountriesAsync(context);
+                Log.Information("Production seeding completed");
+            }
+            else
+            {
+                Log.Information("Countries exist, skipping seeding");
+            }
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, "Production seeding failed");
+        }
+    }
+
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
     });
-});
 
-var app = builder.Build();
+    app.UseCors("AllowFrontend");
+    app.UseIpRateLimiting();
 
-using (var scope = app.Services.CreateScope())
-{
-    var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    var seedService = scope.ServiceProvider.GetRequiredService<CountrySeedService>();
-
-    try
+    if (app.Environment.IsDevelopment())
     {
-        /*
-         *************************************************************
-         * Kept for development purposes only! Remove/comment out in production!
-         *************************************************************
-        Console.WriteLine("Clearing existing countries...");
-        context.Countries.RemoveRange(context.Countries);
-        await context.SaveChangesAsync();
-        Console.WriteLine("Countries cleared!");
-        *************************************************************
-        */
-        Console.WriteLine("Seeding countries...");
-        await seedService.SeedCountriesAsync(context);
-        Console.WriteLine("Seeding complete!");
+        app.UseSwagger();
+        app.UseSwaggerUI();
     }
-    catch (Exception ex)
-    {
-        Console.WriteLine($"Error in Seeding: {ex.Message}");
-        throw;
-    }
+
+    app.UseHttpsRedirection();
+    app.MapControllers();
+
+    Log.Information("WhatTheWorld API starting in {Environment}", app.Environment.EnvironmentName);
+    app.Run();
 }
-
-app.UseCors("AllowFrontend");
-
-if (app.Environment.IsDevelopment())
+catch (Exception ex)
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    Log.Fatal(ex, "Application terminated unexpectedly");
 }
-
-app.UseHttpsRedirection();
-app.MapControllers();
-
-app.Run();
+finally
+{
+    Log.CloseAndFlush();
+}

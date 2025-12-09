@@ -2,20 +2,23 @@
 using WhatTheWorld.Application.Services.Interfaces;
 using WhatTheWorld.Domain;
 using WhatTheWorld.Infrastructure.Repositories.Interfaces;
+using Microsoft.Extensions.Logging;
 
 namespace WhatTheWorld.Application.Services
 {
     public sealed class NewsService(
         INewsRepository newsRepository,
         IPerplexityService perplexityService,
-        IMemoryCache cache) : INewsService
+        IMemoryCache cache,
+        ILogger<NewsService> logger) : INewsService
     {
         private readonly INewsRepository _newsRepository = newsRepository;
         private readonly IPerplexityService _perplexityService = perplexityService;
         private readonly IMemoryCache _cache = cache;
+        private readonly ILogger<NewsService> _logger = logger;
 
         /// <summary>
-        /// Get cached news (FAST)
+        /// Get cached news
         /// </summary>
         public async Task<List<NewsDto>> GetCachedNewsAsync(int countryId)
         {
@@ -34,7 +37,7 @@ namespace WhatTheWorld.Application.Services
         }
 
         /// <summary>
-        /// Check if refresh needed, fetch if yes (SLOW)
+        /// Check if refresh needed, fetch if yes
         /// </summary>
         public async Task<NewsRefreshResult> RefreshNewsAsync(int countryId)
         {
@@ -43,8 +46,6 @@ namespace WhatTheWorld.Application.Services
 
             if (lastFetch.HasValue && (now - lastFetch.Value).TotalHours < 24)
             {
-                Console.WriteLine($"[NewsService] News for country {countryId} already fresh (last fetch: {lastFetch.Value})");
-
                 return new NewsRefreshResult
                 {
                     WasRefreshed = false,
@@ -54,14 +55,10 @@ namespace WhatTheWorld.Application.Services
                 };
             }
 
-            Console.WriteLine($"[NewsService] Fetching fresh news for country {countryId}...");
-
             var freshNews = await _perplexityService.GenerateNewsByCountryIdAsync(countryId);
 
             if (freshNews.Count == 0)
             {
-                Console.WriteLine($"[NewsService] No news received from Perplexity");
-
                 return new NewsRefreshResult
                 {
                     WasRefreshed = false,
@@ -75,7 +72,7 @@ namespace WhatTheWorld.Application.Services
 
             if (!success)
             {
-                Console.WriteLine($"[NewsService] Failed to save news to database");
+                _logger.LogError($"[NewsService] Failed to save news to database");
 
                 return new NewsRefreshResult
                 {
@@ -86,13 +83,9 @@ namespace WhatTheWorld.Application.Services
                 };
             }
 
-            // 5. Invalidate cache
             _cache.Remove($"news_cached_{countryId}");
 
-            // 6. Return fresh news
             var updatedNews = await GetCachedNewsAsync(countryId);
-
-            Console.WriteLine($"[NewsService] Successfully refreshed {freshNews.Count} news for country {countryId}");
 
             return new NewsRefreshResult
             {
@@ -105,7 +98,6 @@ namespace WhatTheWorld.Application.Services
     }
 }
 
-// Result DTO
 public sealed record NewsRefreshResult
 {
     public required bool WasRefreshed { get; init; }

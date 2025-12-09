@@ -4,18 +4,14 @@ namespace WhatTheWorld.Api.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public sealed class MapController : ControllerBase
+    public sealed class MapController(
+        IConfiguration configuration,
+        IHttpClientFactory httpClientFactory,
+        ILogger<MapController> logger) : ControllerBase
     {
-        private readonly IConfiguration _configuration;
-        private readonly IHttpClientFactory _httpClientFactory;
-
-        public MapController(
-            IConfiguration configuration,
-            IHttpClientFactory httpClientFactory)
-        {
-            _configuration = configuration;
-            _httpClientFactory = httpClientFactory;
-        }
+        private readonly IConfiguration _configuration = configuration;
+        private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
+        private readonly ILogger<MapController> _logger = logger;
 
         [HttpGet("tiles/{theme}/{z}/{x}/{y}.png")]
         [ResponseCache(Duration = 86400)]
@@ -35,7 +31,10 @@ namespace WhatTheWorld.Api.Controllers
                 return BadRequest("Invalid tile coordinates");
             }
 
-            var token = _configuration["JawgKey"];
+            var token = _configuration["JAWG_KEY"] ??
+                _configuration["ExternalApis:JawgKey"] ??
+                throw new InvalidOperationException("Couldnt get Jawg Key!");
+
             if (string.IsNullOrEmpty(token))
             {
                 return StatusCode(500, "Map service not configured");
@@ -60,7 +59,7 @@ namespace WhatTheWorld.Api.Controllers
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error fetching map tile: {ex.Message}");
+                _logger.LogError($"Error fetching map tile: {ex.Message}");
                 return StatusCode(500, "Error fetching map tile");
             }
         }

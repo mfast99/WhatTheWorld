@@ -1,13 +1,15 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WhatTheWorld.Domain;
 using WhatTheWorld.Infrastructure.Data;
 using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
 namespace WhatTheWorld.Infrastructure.Repositories
 {
-    public sealed class NewsRepository(AppDbContext context) : INewsRepository
+    public sealed class NewsRepository(AppDbContext context, ILogger<NewsRepository> logger) : INewsRepository
     {
         private readonly AppDbContext _context = context;
+        private readonly ILogger<NewsRepository> _logger = logger;
 
         /// <summary>
         /// Get cached news (last 7 days)
@@ -72,12 +74,11 @@ namespace WhatTheWorld.Infrastructure.Repositories
                 await _context.News.AddRangeAsync(newsEntities);
                 await _context.SaveChangesAsync();
 
-                Console.WriteLine($"[NewsRepository] Created {newsEntities.Count} news for country {countryId}");
                 return true;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"[NewsRepository] Error: {ex.Message}");
+                _logger.LogError($"[NewsRepository] Error: {ex.Message}");
                 return false;
             }
         }
@@ -99,7 +100,6 @@ namespace WhatTheWorld.Infrastructure.Repositories
             _context.News.RemoveRange(oldNews);
             await _context.SaveChangesAsync();
 
-            Console.WriteLine($"[NewsRepository] Cleaned up {oldNews.Count} old news");
             return oldNews.Count;
         }
     }

@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging; // ✅ Hinzugefügt
 using System.Text.Json;
 using WhatTheWorld.Application.Services.Interfaces;
 using WhatTheWorld.Domain;
@@ -13,14 +14,18 @@ namespace WhatTheWorld.Application.Services
         ICountryRepository countryRepository,
         HttpClient httpClient,
         IConfiguration config,
-        IMemoryCache cache) : IWeatherService
+        IMemoryCache cache,
+        ILogger<WeatherService> logger) : IWeatherService
     {
         private readonly IWeatherRepository _weatherRepository = weatherRepository;
         private readonly ICountryRepository _countryRepository = countryRepository;
         private readonly HttpClient _httpClient = httpClient;
         private readonly IConfiguration _config = config;
         private readonly IMemoryCache _cache = cache;
-        private readonly string _apiKey = config["WeatherApiKey"] ?? throw new InvalidOperationException("WeatherApiKey missing");
+        private readonly ILogger<WeatherService> _logger = logger;
+        private readonly string _apiKey = config["WEATHER_API_KEY"] ??
+            config["ExternalApis:WeatherApiKey"] ??
+            throw new InvalidOperationException("WeatherApiKey missing");
 
         public async Task<WeatherDto?> GetCurrentWeatherByCountryIdAsync(int countryId)
         {
@@ -45,7 +50,7 @@ namespace WhatTheWorld.Application.Services
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Weather API Error: {ex.Message}");
+                _logger.LogError(ex, "Weather API Error for CountryId {CountryId}", countryId);
                 return null;
             }
         }
@@ -54,16 +59,17 @@ namespace WhatTheWorld.Application.Services
         {
             try
             {
-                var url = $"current.json?key={_apiKey}&q={countryName}&aqi=no";
+                var url = $"current.json?key={_apiKey}&q={Uri.EscapeDataString(countryName)}&aqi=no";
+                _logger.LogInformation("Fetching weather for {CountryName}", countryName);
+
                 var response = await _httpClient.GetAsync(url);
 
                 if (!response.IsSuccessStatusCode)
-                    throw new HttpRequestException();
+                    throw new HttpRequestException($"HTTP {response.StatusCode}");
 
                 var json = await response.Content.ReadAsStringAsync();
                 using var doc = JsonDocument.Parse(json);
                 var root = doc.RootElement;
-
                 var current = root.GetProperty("current");
                 var condition = current.GetProperty("condition");
 
@@ -77,11 +83,12 @@ namespace WhatTheWorld.Application.Services
                     IconUrl = $"https:{condition.GetProperty("icon").GetString()}"
                 };
 
+                _logger.LogInformation("Weather fetched successfully for {CountryName}", countryName);
                 return weather;
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Fetch Weather Error: {ex.Message}");
+                _logger.LogError(ex, "Fetch Weather Error for {CountryName}", countryName);
                 throw;
             }
         }

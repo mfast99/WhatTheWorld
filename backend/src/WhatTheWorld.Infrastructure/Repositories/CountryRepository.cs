@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using WhatTheWorld.Domain;
 using WhatTheWorld.Infrastructure.Data;
 using WhatTheWorld.Infrastructure.Mappings;
@@ -6,9 +7,10 @@ using WhatTheWorld.Infrastructure.Repositories.Interfaces;
 
 namespace WhatTheWorld.Infrastructure.Repositories
 {
-    public sealed class CountryRepository(AppDbContext context) : ICountryRepository
+    public sealed class CountryRepository(AppDbContext context, ILogger<CountryRepository> logger) : ICountryRepository
     {
         private readonly AppDbContext _context = context;
+        private readonly ILogger<CountryRepository> _logger = logger;
 
         public async Task<List<CountryListDto>> GetAllCountriesAsync()
         {
@@ -27,7 +29,7 @@ namespace WhatTheWorld.Infrastructure.Repositories
             }
             catch (Exception)
             {
-                Console.WriteLine("Country doesnt exist.");
+                _logger.LogError("Country doesnt exist.");
                 throw;
             }
         }

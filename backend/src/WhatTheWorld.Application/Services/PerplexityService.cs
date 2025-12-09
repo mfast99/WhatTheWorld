@@ -1,4 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
+using System.Data;
+using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using WhatTheWorld.Application.Services.Interfaces;
@@ -10,20 +13,26 @@ namespace WhatTheWorld.Application.Services
     public sealed class PerplexityService(
         HttpClient httpClient,
         IConfiguration config,
-        ICountryRepository countryRepository) : IPerplexityService
+        ICountryRepository countryRepository,
+        ILogger<PerplexityService> logger) : IPerplexityService
     {
         private readonly HttpClient _httpClient = httpClient;
         private readonly IConfiguration _config = config;
-        private readonly string _apiKey = config["PerplexityApiKey"] ??
-                throw new InvalidOperationException("PerplexityApiKey missing");
+        private readonly string _apiKey = config["PERPLEXITY_API_KEY"] ??
+            config["ExternalApis:PerplexityApiKey"] ??
+            throw new InvalidOperationException("PerplexityApiKey missing");
         private readonly ICountryRepository _countryRepository = countryRepository;
+        private readonly ILogger<PerplexityService> _logger = logger;
 
         public async Task<List<NewsDto>> GenerateNewsByCountryIdAsync(int countryId)
         {
             try
             {
                 var country = await _countryRepository.GetCountryByIdAsync(countryId);
-                var promptTemplate = _config["PerplexityNewsPrompt"] ?? throw new Exception();
+                var promptTemplate = _config["PERPLEXITY_NEWS_PROMPT"] ?? 
+                    _config["PerplexityNewsPrompt"] ??
+                    throw new InvalidOperationException("Couldnt get Perplexity Prompt!");
+
                 var prompt = promptTemplate
                     .Replace("{{COUNTRY_NAME}}", country!.Name)
                     .Replace("{{COUNTRY_CODE}}", country.Code);
@@ -37,9 +46,11 @@ namespace WhatTheWorld.Application.Services
                 };
 
                 _httpClient.DefaultRequestHeaders.Authorization =
-                    new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _apiKey);
+                    new AuthenticationHeaderValue("Bearer", _apiKey);
 
-                var response = await _httpClient.PostAsJsonAsync("https://api.perplexity.ai/chat/completions", requestBody);
+                var response = await _httpClient.PostAsJsonAsync("", requestBody);
+                response.EnsureSuccessStatusCode();
+
                 var responseJson = await response.Content.ReadAsStringAsync();
                 var parsedResponse = JsonDocument.Parse(responseJson);
                 var content = parsedResponse.RootElement
@@ -49,7 +60,6 @@ namespace WhatTheWorld.Application.Services
                     .GetString() ?? "[]";
 
                 var newsArray = JsonDocument.Parse(content).RootElement;
-
                 var newsList = new List<NewsDto>();
 
                 foreach (var item in newsArray.EnumerateArray())
@@ -69,13 +79,13 @@ namespace WhatTheWorld.Application.Services
                     );
                     newsList.Add(newsDto);
                 }
-                newsList = [.. newsList.Take(3)];
 
+                newsList = [.. newsList.Take(3)];
                 return newsList;
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Perplexity Error: {ex.Message}");
+                _logger.LogError(ex, "Perplexity Error for CountryId {CountryId}", countryId);
                 return [];
             }
         }
