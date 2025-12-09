@@ -12,26 +12,30 @@ jobs:
     # 1. Code auschecken
     - uses: actions/checkout@v4
 
-    # 2. .NET Backend bauen (Angepasst)
+    # 2. .NET Backend bauen (FINAL KORRIGIERT)
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: '10.0.x' # Wichtig: Nutze die korrekte .NET Version
+        dotnet-version: '10.0.x'
 
     - name: Build Backend
       run: |
-        # 1. Zuerst Pakete wiederherstellen
+        # 1. In das SLN-Verzeichnis wechseln und Pakete wiederherstellen
         cd backend/src
         dotnet restore WhatTheWorld.sln
         
         # 2. Solution publishen. Output liegt in ./publish
         dotnet publish WhatTheWorld.sln -c Release -o ./publish
         
-        # 3. Den finalen API-Code in ein temp-Verzeichnis verschieben
-        # ACHTUNG: Wir rsyncen nun direkt den Inhalt des publish-Ordners, 
-        # da die DLLs direkt darin liegen und NICHT in einem Unterordner WhatTheWorld.Api
-        mkdir -p ../temp_backend_publish
-        rsync -a ./publish/ ../temp_backend_publish/
+        # 3. Die fertigen Binaries in den temporären Upload-Ordner VERSCHIEBEN.
+        #    Der Ordner MUSS im Repo-Root liegen, damit SCP ihn findet.
+        #    Wir nutzen hier absoluten Pfad zum Repo-Root: ${{ github.workspace }}
+        
+        # Sicherstellen, dass der Upload-Ordner existiert (im Repo-Root)
+        mkdir -p ${{ github.workspace }}/temp_backend_publish
+        
+        # Verschiebe den Output (./publish/*) in den neuen temporären Ordner
+        rsync -a ./publish/ ${{ github.workspace }}/temp_backend_publish/   
 
     # 3. React Frontend bauen (Bleibt gleich)
     - name: Build Frontend
