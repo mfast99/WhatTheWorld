@@ -38,7 +38,7 @@ try
         });
 
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
-                               ?? "Data Source=whattheworld.db"; 
+                               ?? "Data Source=whattheworld.db";
     builder.Services.AddDbContext<AppDbContext>(options =>
         options.UseSqlite(connectionString));
 
@@ -109,7 +109,7 @@ try
             await context.Database.MigrateAsync();
             Log.Information("Database migrations applied successfully.");
 
-            if (!await context.Countries.AnyAsync())
+            /*if (!await context.Countries.AnyAsync())
             {
                 Log.Information("Country seeding started");
                 await seedService.SeedCountriesAsync(context);
@@ -118,11 +118,11 @@ try
             else
             {
                 Log.Information("Countries exist, skipping seeding");
-            }
+            }*/
         }
         catch (Exception ex)
         {
-            Log.Fatal(ex, "Application terminated unexpectedly during database initialization.");
+            Log.Fatal(ex, "Application terminated unexpectedly during database initialization (Migration or Seeding).");
             throw;
         }
     }
