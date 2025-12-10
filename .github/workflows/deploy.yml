@@ -2,105 +2,85 @@ name: Deploy to Hetzner
 
 on:
   push:
-    branches: [ "main" ] # Oder "master", je nach deinem Branch-Namen
+    branches: [ "main" ]
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Code auschecken
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    # 2. .NET Backend bauen
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '10.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
 
-    - name: Build Backend
-      run: |
-        # 1. In das SLN-Verzeichnis wechseln und Pakete wiederherstellen
-        cd backend/src
-        dotnet restore WhatTheWorld.sln
-        
-        # 2. Solution publishen. Output liegt in ./publish
-        dotnet publish WhatTheWorld.sln -c Release -o ./publish
-        
-        # 3. Die fertigen Binaries in den temporären Upload-Ordner VERSCHIEBEN.
-        #    Der Ordner MUSS im Repo-Root liegen, damit SCP ihn findet.
-        #    Wir nutzen hier absoluten Pfad zum Repo-Root: ${{ github.workspace }}
-        
-        # Sicherstellen, dass der Upload-Ordner existiert (im Repo-Root)
-        mkdir -p ${{ github.workspace }}/temp_backend_publish
-        
-        # Verschiebe den Output (./publish/*) in den neuen temporären Ordner
-        rsync -a ./publish/ ${{ github.workspace }}/temp_backend_publish/   
+      - name: Build Backend
+        run: |
+          cd backend/src
+          dotnet restore WhatTheWorld.sln
+          dotnet publish WhatTheWorld.sln -c Release -o ./publish
 
-    # 3. React Frontend bauen 
-    - name: Build Frontend
-      run: |
-        cd frontend
-        npm install
-        npm run build
+          mkdir -p ${{ github.workspace }}/temp_backend_publish
+          rsync -a ./publish/ ${{ github.workspace }}/temp_backend_publish/
 
-    # 4. Dateien auf den Server kopieren
-    # Wir laden beide Ordner einzeln hoch, um Fehler zu vermeiden.
-    - name: Copy Backend to server
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        source: "temp_backend_publish/*"
-        target: "/var/www/whattheworld_temp/backend/"
-        strip_components: 0
+      - name: Build Frontend
+        run: |
+          cd frontend
+          npm install
+          npm run build
 
-    - name: Copy Frontend to server
-      uses: appleboy/scp-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        source: "frontend/dist/*"
-        target: "/var/www/whattheworld_temp/frontend/"
-        strip_components: 0
+      - name: Copy Backend to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "temp_backend_publish/*"
+          target: "/var/www/whattheworld_temp/backend/"
+          strip_components: 0
 
-# 5. Move files and restart
-    - name: Move files and restart
-      uses: appleboy/ssh-action@master
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.VPS_SSH_KEY }}
-        script: |
-          # 1. Backend verschieben (Binaries): Kopiert den INHALT
-          rsync -av --delete /var/www/whattheworld_temp/backend/temp_backend_publish/ /var/www/whattheworld/backend/
-          
-          # 2. Frontend verschieben (optional, aber nützlich für Backups)
-          # Dies verschiebt den Inhalt von temp/frontend nach /var/www/whattheworld/frontend/
-          rsync -av --delete /var/www/whattheworld_temp/frontend/ /var/www/whattheworld/frontend/
-          
-          # --- KORREKTUR HIER: Sicherstellen, dass index.html im wwwroot landet ---
-          
-          # 3. wwwroot erstellen (im Backend)
-          sudo mkdir -p /var/www/whattheworld/backend/wwwroot       
-          
-          # 4. KORREKTUR: Verwende rsync um den INHALT (index.html) des finalen 
-          # Frontend-Verzeichnisses in den wwwroot des Backends zu kopieren.
-          # Der Trailing Slash VOR dem Leerzeichen ( / ) ist hier entscheidend.
-          # Die Quelle ist /var/www/whattheworld/frontend/ (die wir in Schritt 2 befüllt haben)
-          sudo cp -r /var/www/whattheworld/frontend/* /var/www/whattheworld/backend/wwwroot/
-          
-          # 5. Temp löschen
-          rm -rf /var/www/whattheworld_temp
-          
-          # 6. Berechtigungen setzen (Backend-Dateien und statische Dateien)
-          sudo chown -R www-data:www-data /var/www/whattheworld/backend/
-          sudo find /var/www/whattheworld/backend/wwwroot -type d -exec chmod 755 {} \;
-          sudo find /var/www/whattheworld/backend/wwwroot -type f -exec chmod 644 {} \;
-          chmod 755 /var/www/whattheworld/backend/WhatTheWorld.Api.dll
-          
-          # 7. Service neustarten
-          systemctl daemon-reload
-          systemctl restart whattheworld-backend
+      - name: Copy Frontend to server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "frontend/dist/*"
+          target: "/var/www/whattheworld_temp/frontend/"
+          strip_components: 0
+
+      - name: Deploy and restart services
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            set -e
+
+            # Backend deployen
+            sudo mkdir -p /var/www/whattheworld/backend
+            sudo rsync -av --delete /var/www/whattheworld_temp/backend/ /var/www/whattheworld/backend/
+
+            # Frontend-Build direkt in wwwroot legen
+            sudo rm -rf /var/www/whattheworld/backend/wwwroot
+            sudo mkdir -p /var/www/whattheworld/backend/wwwroot
+            sudo rsync -av --delete /var/www/whattheworld_temp/frontend/ /var/www/whattheworld/backend/wwwroot/
+
+            # Temp-Verzeichnis aufräumen
+            sudo rm -rf /var/www/whattheworld_temp
+
+            # Berechtigungen setzen
+            sudo chown -R www-data:www-data /var/www/whattheworld/backend/
+            sudo find /var/www/whattheworld/backend -type d -exec chmod 755 {} \;
+            sudo find /var/www/whattheworld/backend -type f -exec chmod 644 {} \;
+            sudo chmod 755 /var/www/whattheworld/backend/WhatTheWorld.Api.dll
+
+            # Dienste neu starten (Configs bleiben auf dem Server)
+            sudo systemctl daemon-reload
+            sudo systemctl restart whattheworld-backend
+
+            sudo nginx -t
+            sudo systemctl reload nginx

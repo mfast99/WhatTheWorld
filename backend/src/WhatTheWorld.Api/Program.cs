@@ -145,7 +145,7 @@ try
     app.MapControllers();
 
     Log.Information("WhatTheWorld API starting in {Environment}", app.Environment.EnvironmentName);
-    app.MapFallbackToFile("index.html");
+    app.MapFallbackToFile("/frontend/index.html");
     app.Run();
 }
 catch (Exception ex)
