@@ -23,7 +23,10 @@ export default function CountryMapDesktop({
   const tileLayerRef = useRef<L.TileLayer | null>(null)
   const markersRef = useRef<L.Marker[]>([])
   const { colorScheme } = useTheme()
-
+  const isDev = import.meta.env.MODE === 'development'
+  const TILE_BASE_URL = isDev 
+    ? 'http://localhost:5230' // KORREKTUR: Nur die Basis-URL des Kestrel-Servers
+    : ''
   useEffect(() => {
     if (!mapRef.current || mapInstanceRef.current) return
 
@@ -67,8 +70,8 @@ export default function CountryMapDesktop({
     }
 
     const tileUrl = colorScheme === 'light'
-      ? `http://localhost:5230/api/Map/tiles/light/{z}/{x}/{y}.png`
-      : `http://localhost:5230/api/Map/tiles/dark/{z}/{x}/{y}.png`
+          ? `${TILE_BASE_URL}/api/Map/tiles/light/{z}/{x}/{y}.png`
+          : `${TILE_BASE_URL}/api/Map/tiles/dark/{z}/{x}/{y}.png`
 
     tileLayerRef.current = L.tileLayer(tileUrl, {
       attribution:
@@ -80,7 +83,7 @@ export default function CountryMapDesktop({
       bounds: undefined,
       keepBuffer: 2
     }).addTo(mapInstanceRef.current)
-  }, [colorScheme])
+  }, [colorScheme, TILE_BASE_URL])
 
   useEffect(() => {
     if (!mapInstanceRef.current) return
