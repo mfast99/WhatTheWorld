@@ -42,14 +42,19 @@ namespace WhatTheWorld.Application.Services
         public async Task<NewsRefreshResult> RefreshNewsAsync(int countryId)
         {
             var lastFetch = await _newsRepository.GetLastFetchTimeAsync(countryId);
+            var cachedNews = await GetCachedNewsAsync(countryId);
             var now = DateTime.UtcNow;
 
-            if (lastFetch.HasValue && (now - lastFetch.Value).TotalHours < 24)
+            var hasRecentNews = lastFetch.HasValue
+                && (now - lastFetch.Value).TotalHours < 24
+                && cachedNews.Count > 0;
+
+            if (hasRecentNews)
             {
                 return new NewsRefreshResult
                 {
                     WasRefreshed = false,
-                    News = await GetCachedNewsAsync(countryId),
+                    News = cachedNews,
                     LastFetchTime = lastFetch.Value,
                     NextFetchAllowed = lastFetch.Value.AddHours(24)
                 };
@@ -62,7 +67,7 @@ namespace WhatTheWorld.Application.Services
                 return new NewsRefreshResult
                 {
                     WasRefreshed = false,
-                    News = await GetCachedNewsAsync(countryId),
+                    News = cachedNews,
                     LastFetchTime = lastFetch,
                     NextFetchAllowed = now.AddHours(1)
                 };
@@ -72,12 +77,12 @@ namespace WhatTheWorld.Application.Services
 
             if (!success)
             {
-                _logger.LogError($"[NewsService] Failed to save news to database");
+                _logger.LogError($"[NewsService] Failed to save {freshNews.Count} news to database for country {countryId}");
 
                 return new NewsRefreshResult
                 {
                     WasRefreshed = false,
-                    News = await GetCachedNewsAsync(countryId),
+                    News = cachedNews,
                     LastFetchTime = lastFetch,
                     NextFetchAllowed = now.AddHours(1)
                 };
