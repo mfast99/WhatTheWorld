@@ -62,7 +62,7 @@ jobs:
 
             # Backend deployen
             sudo mkdir -p /var/www/whattheworld/backend
-            sudo rsync -av --delete /var/www/whattheworld_temp/backend/ /var/www/whattheworld/backend/
+            sudo rsync -av --delete /var/www/whattheworld_temp/backend/temp_backend_publish/ /var/www/whattheworld/backend/
 
             # Frontend-Build direkt in wwwroot legen
             sudo rm -rf /var/www/whattheworld/backend/wwwroot
