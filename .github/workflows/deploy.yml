@@ -84,13 +84,13 @@ jobs:
           # --- KORREKTUR HIER: Sicherstellen, dass index.html im wwwroot landet ---
           
           # 3. wwwroot erstellen (im Backend)
-          sudo mkdir -p /var/www/whattheworld/backend/wwwroot
+          sudo mkdir -p /var/www/whattheworld/backend/wwwroot       
           
           # 4. KORREKTUR: Verwende rsync um den INHALT (index.html) des finalen 
           # Frontend-Verzeichnisses in den wwwroot des Backends zu kopieren.
           # Der Trailing Slash VOR dem Leerzeichen ( / ) ist hier entscheidend.
           # Die Quelle ist /var/www/whattheworld/frontend/ (die wir in Schritt 2 befüllt haben)
-          sudo rsync -av --delete /var/www/whattheworld/frontend/ /var/www/whattheworld/backend/wwwroot/
+          sudo cp -r /var/www/whattheworld/frontend/* /var/www/whattheworld/backend/wwwroot/
           
           # 5. Temp löschen
           rm -rf /var/www/whattheworld_temp
