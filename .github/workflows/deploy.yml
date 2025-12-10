@@ -12,7 +12,7 @@ jobs:
     # 1. Code auschecken
     - uses: actions/checkout@v4
 
-    # 2. .NET Backend bauen (FINAL KORRIGIERT)
+    # 2. .NET Backend bauen
     - name: Setup .NET
       uses: actions/setup-dotnet@v4
       with:
@@ -37,14 +37,14 @@ jobs:
         # Verschiebe den Output (./publish/*) in den neuen temporären Ordner
         rsync -a ./publish/ ${{ github.workspace }}/temp_backend_publish/   
 
-    # 3. React Frontend bauen (Bleibt gleich)
+    # 3. React Frontend bauen 
     - name: Build Frontend
       run: |
         cd frontend
         npm install
         npm run build
 
-    # 4. Dateien auf den Server kopieren (JETZT ZUVERLÄSSIGER!)
+    # 4. Dateien auf den Server kopieren
     # Wir laden beide Ordner einzeln hoch, um Fehler zu vermeiden.
     - name: Copy Backend to server
       uses: appleboy/scp-action@master
@@ -52,7 +52,7 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
-        source: "temp_backend_publish/*" # Wir kopieren den INHALT
+        source: "temp_backend_publish/*"
         target: "/var/www/whattheworld_temp/backend/"
         strip_components: 0
 
@@ -62,11 +62,11 @@ jobs:
         host: ${{ secrets.HOST }}
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
-        source: "frontend/dist/*" # Wir kopieren den INHALT
+        source: "frontend/dist/*"
         target: "/var/www/whattheworld_temp/frontend/"
         strip_components: 0
 
-# 5. Move files and restart (FINAL KORREKTUR DER PFADE)
+# 5. Move files and restart
     - name: Move files and restart
       uses: appleboy/ssh-action@master
       with:
@@ -78,26 +78,27 @@ jobs:
           rsync -av --delete /var/www/whattheworld_temp/backend/temp_backend_publish/ /var/www/whattheworld/backend/
           
           # 2. Frontend verschieben (optional, aber nützlich für Backups)
+          # Dies verschiebt den Inhalt von temp/frontend nach /var/www/whattheworld/frontend/
           rsync -av --delete /var/www/whattheworld_temp/frontend/ /var/www/whattheworld/frontend/
           
-          # 3. KORREKTUR: wwwroot im Backend erstellen (falls es nicht existiert)
+          # --- KORREKTUR HIER: Sicherstellen, dass index.html im wwwroot landet ---
+          
+          # 3. wwwroot im Backend erstellen (falls nicht vorhanden)
           sudo mkdir -p /var/www/whattheworld/backend/wwwroot
           
-          # 4. KORREKTUR: Frontend-Assets in den wwwroot des Backends kopieren
-          # Die Frontend-Assets liegen in /var/www/whattheworld_temp/frontend/
-          # Wir kopieren den INHALT (index.html, assets/ etc.)
+          # 4. KORREKTUR: Kopiere den INHALT des /frontend-Verzeichnisses 
+          # in den wwwroot des Backends. Wir nutzen hier den Inhalt aus dem temp-Verzeichnis.
+          # Wir verwenden den Pfad, der die index.html enthält:
           sudo cp -r /var/www/whattheworld_temp/frontend/. /var/www/whattheworld/backend/wwwroot/
           
           # 5. Temp löschen
           rm -rf /var/www/whattheworld_temp
           
-          # 6. Berechtigungen korrigieren (NEU und VORHERIGES ZUSAMMEN)
+          # 6. Berechtigungen setzen (Backend-Dateien und statische Dateien)
           sudo chown -R www-data:www-data /var/www/whattheworld/backend/
-          # Setzt 755 (rwx r-x r-x) für Ordner (wichtig für Durchsuchbarkeit)
           sudo find /var/www/whattheworld/backend/wwwroot -type d -exec chmod 755 {} \;
-          # Setzt 644 (rw- r-- r--) für Dateien (wichtig für Lesbarkeit)
           sudo find /var/www/whattheworld/backend/wwwroot -type f -exec chmod 644 {} \;
-          chmod 755 /var/www/whattheworld/backend/WhatTheWorld.Api.dll # Für das Backend-Binary
+          chmod 755 /var/www/whattheworld/backend/WhatTheWorld.Api.dll
           
           # 7. Service neustarten
           systemctl daemon-reload
