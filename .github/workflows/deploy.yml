@@ -101,4 +101,4 @@ jobs:
           
           # 7. Service neustarten
           systemctl daemon-reload
-          systemctl restart whattheworld-backen
+          systemctl restart whattheworld-backend
