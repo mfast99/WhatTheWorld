@@ -91,10 +91,14 @@ jobs:
           # 5. Temp löschen
           rm -rf /var/www/whattheworld_temp
           
-          # 6. Berechtigungen setzen (Backend-Dateien und statische Dateien)
+          # 6. Berechtigungen korrigieren (NEU und VORHERIGES ZUSAMMEN)
           sudo chown -R www-data:www-data /var/www/whattheworld/backend/
-          chmod 755 /var/www/whattheworld/backend/WhatTheWorld.Api.dll
+          # Setzt 755 (rwx r-x r-x) für Ordner (wichtig für Durchsuchbarkeit)
+          sudo find /var/www/whattheworld/backend/wwwroot -type d -exec chmod 755 {} \;
+          # Setzt 644 (rw- r-- r--) für Dateien (wichtig für Lesbarkeit)
+          sudo find /var/www/whattheworld/backend/wwwroot -type f -exec chmod 644 {} \;
+          chmod 755 /var/www/whattheworld/backend/WhatTheWorld.Api.dll # Für das Backend-Binary
           
           # 7. Service neustarten
           systemctl daemon-reload
-          systemctl restart whattheworld-backend
+          systemctl restart whattheworld-backen
