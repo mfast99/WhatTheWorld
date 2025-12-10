@@ -1,5 +1,3 @@
-// src/presentation/components/NewsSection.tsx
-
 import { JSX } from 'react'
 import { useNews } from '../../hooks/useNews'
 

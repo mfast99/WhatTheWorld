@@ -20,16 +20,18 @@ export function useNews(countryId: number): UseNewsReturn {
   const [nextRefreshAllowed, setNextRefreshAllowed] = useState<Date | null>(null)
 
   const prevCountryIdRef = useRef<number | null>(null)
+  const isLoadingRef = useRef(false)
 
   useEffect(() => {
     const hasCountryChanged = prevCountryIdRef.current !== countryId
     prevCountryIdRef.current = countryId
 
-    if (!hasCountryChanged && news.length > 0) {
+    if (isLoadingRef.current && !hasCountryChanged) {
       return
     }
 
     let isMounted = true
+    isLoadingRef.current = true
 
     const fetchNews = async (): Promise<void> => {
       try {
@@ -62,7 +64,7 @@ export function useNews(countryId: number): UseNewsReturn {
         setIsRefreshing(false)
 
         if (!result) {
-          console.warn(`⚠️ [useNews] Refresh failed`)
+          console.warn(`[useNews] Refresh failed`)
           setError(new Error('Failed to refresh news'))
           return
         }
@@ -74,13 +76,15 @@ export function useNews(countryId: number): UseNewsReturn {
           setNextRefreshAllowed(new Date(result.nextFetchAllowed))
         }
       } catch (err) {
-        console.error(`❌ [useNews] Error:`, err)
+        console.error(`[useNews] Error:`, err)
         
         if (isMounted) {
           setError(err as Error)
           setIsLoadingCached(false)
           setIsRefreshing(false)
         }
+      } finally {
+        isLoadingRef.current = false
       }
     }
 
@@ -89,7 +93,7 @@ export function useNews(countryId: number): UseNewsReturn {
     return () => {
       isMounted = false
     }
-  }, [countryId, news.length])
+  }, [countryId])
 
   return {
     news,

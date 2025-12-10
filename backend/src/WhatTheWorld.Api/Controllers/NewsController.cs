@@ -39,22 +39,5 @@ namespace WhatTheWorld.Api.Controllers
             // Return 200 with fresh news
             return Ok(result);
         }
-
-        /// <summary>
-        /// Legacy endpoint
-        /// </summary>
-        [HttpGet]
-        public async Task<IActionResult> GetNews([FromQuery] int countryId)
-        {
-            var cached = await _newsService.GetCachedNewsAsync(countryId);
-
-            if (cached.Count > 0)
-            {
-                return Ok(cached);
-            }
-
-            var result = await _newsService.RefreshNewsAsync(countryId);
-            return Ok(result.News);
-        }
     }
 }
