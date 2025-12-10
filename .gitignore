@@ -420,3 +420,6 @@ FodyWeavers.xsd
 /backend/src/WhatTheWorld.Infrastructure/Migrations/
 /backend/src/WhatTheWorld.Application/appsettings.json
 /backend/src/WhatTheWorld.Api/appsettings.Production.json
+/backend/src/WhatTheWorld.Api/whattheworld.db
+/backend/src/WhatTheWorld.Api/whattheworld.db-shm
+/backend/src/WhatTheWorld.Api/whattheworld.db-wal
