@@ -8,7 +8,6 @@ interface UseNewsReturn {
   isRefreshing: boolean
   error: Error | null
   wasRefreshed: boolean
-  nextRefreshAllowed: Date | null
 }
 
 export function useNews(countryId: number): UseNewsReturn {
@@ -17,90 +16,61 @@ export function useNews(countryId: number): UseNewsReturn {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [error, setError] = useState<Error | null>(null)
   const [wasRefreshed, setWasRefreshed] = useState(false)
-  const [nextRefreshAllowed, setNextRefreshAllowed] = useState<Date | null>(null)
 
   const prevCountryIdRef = useRef<number | null>(null)
-  const isLoadingRef = useRef(false)
 
   useEffect(() => {
-    const hasCountryChanged = prevCountryIdRef.current !== countryId
-    prevCountryIdRef.current = countryId
+    let active = true
 
-    if (isLoadingRef.current && !hasCountryChanged) {
-      return
-    }
-
-    let isMounted = true
-    isLoadingRef.current = true
-
-    const fetchNews = async (): Promise<void> => {
+    const fetchData = async () => {
       try {
-        if (isMounted) {
-          setNews([])
-          setIsLoadingCached(true)
-          setIsRefreshing(false)
-          setError(null)
-          setWasRefreshed(false)
-          setNextRefreshAllowed(null)
-        }
+        setNews([])
+        setIsLoadingCached(true)
+        setIsRefreshing(false)
+        setError(null)
+        setWasRefreshed(false)
 
         const cached = await NewsRepository.getCached(countryId)
         
-        if (!isMounted) return
+        if (!active) return
         
         setNews(cached)
         setIsLoadingCached(false)
-        
-        await new Promise(resolve => setTimeout(resolve, 500))
 
-        if (!isMounted) return
+        await new Promise(r => setTimeout(r, 300))
         
+        if (!active) return
+
         setIsRefreshing(true)
-
+        
         const result = await NewsRepository.refresh(countryId)
-
-        if (!isMounted) return
+        
+        if (!active) return
 
         setIsRefreshing(false)
 
-        if (!result) {
-          console.warn(`[useNews] Refresh failed`)
-          setError(new Error('Failed to refresh news'))
-          return
-        }
-
-        if (result.wasRefreshed) {
+        if (result?.wasRefreshed && result.news?.length > 0) {
           setNews(result.news)
           setWasRefreshed(true)
-        } else {
-          setNextRefreshAllowed(new Date(result.nextFetchAllowed))
         }
       } catch (err) {
-        console.error(`[useNews] Error:`, err)
-        
-        if (isMounted) {
+        if (active) {
           setError(err as Error)
           setIsLoadingCached(false)
           setIsRefreshing(false)
         }
-      } finally {
-        isLoadingRef.current = false
       }
     }
 
-    fetchNews()
+    if (prevCountryIdRef.current !== countryId) {
+      prevCountryIdRef.current = countryId
+      fetchData()
+    }
 
     return () => {
-      isMounted = false
+      active = false
     }
   }, [countryId])
 
-  return {
-    news,
-    isLoadingCached,
-    isRefreshing,
-    error,
-    wasRefreshed,
-    nextRefreshAllowed,
-  }
+  return { news, isLoadingCached, isRefreshing, error, wasRefreshed }
 }

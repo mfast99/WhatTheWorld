@@ -17,9 +17,6 @@ namespace WhatTheWorld.Application.Services
         private readonly IMemoryCache _cache = cache;
         private readonly ILogger<NewsService> _logger = logger;
 
-        /// <summary>
-        /// Get cached news
-        /// </summary>
         public async Task<List<NewsDto>> GetCachedNewsAsync(int countryId)
         {
             var cacheKey = $"news_cached_{countryId}";
@@ -36,27 +33,22 @@ namespace WhatTheWorld.Application.Services
             return news;
         }
 
-        /// <summary>
-        /// Check if refresh needed, fetch if yes
-        /// </summary>
         public async Task<NewsRefreshResult> RefreshNewsAsync(int countryId)
         {
             var lastFetch = await _newsRepository.GetLastFetchTimeAsync(countryId);
             var cachedNews = await GetCachedNewsAsync(countryId);
             var now = DateTime.UtcNow;
 
-            var hasRecentNews = lastFetch.HasValue
-                && (now - lastFetch.Value).TotalHours < 24
-                && cachedNews.Count > 0;
+            var needsRefresh = !lastFetch.HasValue
+                || (now - lastFetch.Value).TotalHours >= 24
+                || cachedNews.Count == 0;
 
-            if (hasRecentNews)
+            if (!needsRefresh)
             {
                 return new NewsRefreshResult
                 {
                     WasRefreshed = false,
-                    News = cachedNews,
-                    LastFetchTime = lastFetch.Value,
-                    NextFetchAllowed = lastFetch.Value.AddHours(24)
+                    News = cachedNews
                 };
             }
 
@@ -67,26 +59,11 @@ namespace WhatTheWorld.Application.Services
                 return new NewsRefreshResult
                 {
                     WasRefreshed = false,
-                    News = cachedNews,
-                    LastFetchTime = lastFetch,
-                    NextFetchAllowed = now.AddHours(1)
+                    News = cachedNews
                 };
             }
 
-            var success = await _newsRepository.CreateNewsAsync(countryId, freshNews);
-
-            if (!success)
-            {
-                _logger.LogError($"[NewsService] Failed to save {freshNews.Count} news to database for country {countryId}");
-
-                return new NewsRefreshResult
-                {
-                    WasRefreshed = false,
-                    News = cachedNews,
-                    LastFetchTime = lastFetch,
-                    NextFetchAllowed = now.AddHours(1)
-                };
-            }
+            await _newsRepository.CreateNewsAsync(countryId, freshNews);
 
             _cache.Remove($"news_cached_{countryId}");
 
@@ -95,9 +72,7 @@ namespace WhatTheWorld.Application.Services
             return new NewsRefreshResult
             {
                 WasRefreshed = true,
-                News = updatedNews,
-                LastFetchTime = now,
-                NextFetchAllowed = now.AddHours(24)
+                News = updatedNews
             };
         }
     }
@@ -107,6 +82,4 @@ public sealed record NewsRefreshResult
 {
     public required bool WasRefreshed { get; init; }
     public required List<NewsDto> News { get; init; }
-    public required DateTime? LastFetchTime { get; init; }
-    public required DateTime NextFetchAllowed { get; init; }
 }

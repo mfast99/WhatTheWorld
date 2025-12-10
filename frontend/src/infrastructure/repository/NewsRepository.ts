@@ -4,8 +4,6 @@ import { News } from '../../domain/models/News'
 export interface NewsRefreshResult {
   wasRefreshed: boolean
   news: News[]
-  lastFetchTime: string | null
-  nextFetchAllowed: string
 }
 
 export class NewsRepository {
@@ -15,9 +13,9 @@ export class NewsRepository {
         params: { countryId }
       })
       
-      return response.data
+      return response.data || []
     } catch (error) {
-      console.error('❌ [NewsRepository] Error fetching cached news:', error)
+      console.error('[NewsRepository] getCached error:', error)
       return []
     }
   }
@@ -29,24 +27,13 @@ export class NewsRepository {
         null,
         {
           params: { countryId },
-          timeout: 20000,
-          validateStatus: (status) => status === 200 || status === 304
+          timeout: 20000
         }
       )
 
-      if (response.status === 304) {
-        const nextRefresh = response.headers['x-next-refresh']
-        
-        return {
-          wasRefreshed: false,
-          news: [],
-          lastFetchTime: null,
-          nextFetchAllowed: nextRefresh || new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-        }
-      }
       return response.data
     } catch (error) {
-      console.error('❌ [NewsRepository] Error refreshing news:', error)
+      console.error('[NewsRepository] refresh error:', error)
       return null
     }
   }

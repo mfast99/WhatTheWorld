@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WhatTheWorld.Application.Services.Interfaces;
-using WhatTheWorld.Domain;
 
 namespace WhatTheWorld.Api.Controllers
 {
@@ -10,9 +9,6 @@ namespace WhatTheWorld.Api.Controllers
     {
         private readonly INewsService _newsService = newsService;
 
-        /// <summary>
-        /// Get cached news
-        /// </summary>
         [HttpGet("cached")]
         public async Task<IActionResult> GetCachedNews([FromQuery] int countryId)
         {
@@ -20,23 +16,11 @@ namespace WhatTheWorld.Api.Controllers
             return Ok(news);
         }
 
-        /// <summary>
-        /// Refresh news if needed
-        /// Returns 304 Not Modified if already fresh
-        /// </summary>
         [HttpPost("refresh")]
         public async Task<IActionResult> RefreshNews([FromQuery] int countryId)
         {
             var result = await _newsService.RefreshNewsAsync(countryId);
 
-            if (!result.WasRefreshed)
-            {
-                // Return 304 with info when next refresh is allowed
-                Response.Headers.Append("X-Next-Refresh", result.NextFetchAllowed.ToString("o"));
-                return StatusCode(304);  // Not Modified
-            }
-
-            // Return 200 with fresh news
             return Ok(result);
         }
     }

@@ -88,37 +88,39 @@ export default function NewsSection({
             <p className="text-5xl mb-3">📭</p>
             <p className="text-lg font-semibold mb-1">No news available</p>
             <p className="text-sm opacity-60">
-              Found no news for yet {countryName}
+              Found no news yet for {countryName}
             </p>
           </div>
         )}
 
-        {news.map((article, index) => (
-          <a
-            key={`${article.id}-${index}`}
-            href={article.url}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="block p-4 bg-black/10 dark:bg-white/5 rounded-lg hover:bg-black/20 dark:hover:bg-white/10 transition-all duration-200 hover:scale-[1.02]"
-          >
-            <h4 className="font-semibold line-clamp-2 mb-2 text-[rgb(var(--color-text))]">
-              {article.title}
-            </h4>
-            <p className="text-sm opacity-75 line-clamp-2 mb-3">
-              {article.summary}
-            </p>
-            <div className="flex items-center justify-between text-xs opacity-60">
-              <span className="font-medium">{article.source}</span>
-              <time dateTime={article.publishedAt}>
-                {new Date(article.publishedAt).toLocaleDateString('en-GB', {
-                  day: '2-digit',
-                  month: 'short',
-                  year: 'numeric'
-                })}
-              </time>
-            </div>
-          </a>
-        ))}
+        {news.length > 0 && news.map((article, index) => {
+          return (
+            <a
+              key={`${article.id}-${index}`}
+              href={article.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block p-4 bg-black/10 dark:bg-white/5 rounded-lg hover:bg-black/20 dark:hover:bg-white/10 transition-all duration-200 hover:scale-[1.02]"
+            >
+              <h4 className="font-semibold line-clamp-2 mb-2 text-[rgb(var(--color-text))]">
+                {article.title}
+              </h4>
+              <p className="text-sm opacity-75 line-clamp-2 mb-3">
+                {article.summary}
+              </p>
+              <div className="flex items-center justify-between text-xs opacity-60">
+                <span className="font-medium">{article.source}</span>
+                <time dateTime={article.publishedAt}>
+                  {new Date(article.publishedAt).toLocaleDateString('en-GB', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric'
+                  })}
+                </time>
+              </div>
+            </a>
+          )
+        })}
       </div>
     </div>
   )
