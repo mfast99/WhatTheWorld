@@ -74,19 +74,27 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.VPS_SSH_KEY }}
         script: |
-          # 1. Backend verschieben: Kopiert den INHALT von temp_backend_publish
-          #    in das finale Backend-Verzeichnis. WIR MÜSSEN IN DEN UNTERORDNER GEHEN!
+          # 1. Backend verschieben (Binaries): Kopiert den INHALT
           rsync -av --delete /var/www/whattheworld_temp/backend/temp_backend_publish/ /var/www/whattheworld/backend/
           
-          # 2. Frontend verschieben
+          # 2. Frontend verschieben (optional, aber nützlich für Backups)
           rsync -av --delete /var/www/whattheworld_temp/frontend/ /var/www/whattheworld/frontend/
           
-          # 3. Temp löschen
+          # 3. KORREKTUR: wwwroot im Backend erstellen (falls es nicht existiert)
+          sudo mkdir -p /var/www/whattheworld/backend/wwwroot
+          
+          # 4. KORREKTUR: Frontend-Assets in den wwwroot des Backends kopieren
+          # Die Frontend-Assets liegen in /var/www/whattheworld_temp/frontend/
+          # Wir kopieren den INHALT (index.html, assets/ etc.)
+          sudo cp -r /var/www/whattheworld_temp/frontend/. /var/www/whattheworld/backend/wwwroot/
+          
+          # 5. Temp löschen
           rm -rf /var/www/whattheworld_temp
           
-          # 4. Berechtigungen setzen (wichtig)
+          # 6. Berechtigungen setzen (Backend-Dateien und statische Dateien)
+          sudo chown -R www-data:www-data /var/www/whattheworld/backend/
           chmod 755 /var/www/whattheworld/backend/WhatTheWorld.Api.dll
           
-          # 5. Service neustarten
+          # 7. Service neustarten
           systemctl daemon-reload
           systemctl restart whattheworld-backend
